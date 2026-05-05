@@ -147,6 +147,14 @@ body::before {
     margin-bottom: 18px;
     box-shadow: var(--card-shadow);
     position: relative;
+}
+
+.form-card {
+    overflow: visible;
+}
+
+.records-card,
+.stats-card {
     overflow: hidden;
 }
 
@@ -455,7 +463,7 @@ body::before {
 .record-item {
     background: rgba(26, 26, 46, 0.4);
     border-radius: 12px;
-    padding: 14px;
+    padding: 14px 70px 14px 14px;
     position: relative;
     border: 1px solid rgba(92, 138, 74, 0.15);
     transition: border-color 0.2s;
@@ -518,7 +526,7 @@ body::before {
 
 .delete-form {
     position: absolute;
-    top: 10px;
+    top: 14px;
     right: 10px;
 }
 

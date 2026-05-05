@@ -16,143 +16,207 @@
             <p class="subtitle">记录你的每一次"嗯嗯"</p>
         </header>
 
-        <!-- Add Record Form -->
-        <section class="card form-card">
-            <h2>➕ 添加记录</h2>
-            <form action="/add" method="POST" id="poopForm">
-                <!-- Date & Time - 支持补录但不能超前 -->
-                <div class="form-group">
-                    <label>📅 日期和时间</label>
-                    <input type="datetime-local" id="datetime" name="datetime" required>
-                    <p class="hint">可以记录之前的哦，但不能是未来时间~</p>
-                </div>
-                
-                <!-- Poop Type - 7种Bristol分类 -->
-                <div class="form-group">
-                    <label>💩 大便类型</label>
-                    <div class="type-grid">
-                        {% for type_code, type_name in poop_types %}
-                        <label class="type-option">
-                            <input type="radio" name="type" value="{{ type_code }}" required>
-                            <span class="type-box">
-                                <span class="poop-icon">{{ ['🫏', '🌭', '🌭', '🍌', '🥚', '🥣', '💧'][loop.index0] }}</span>
-                                <span class="type-name">{{ type_name }}</span>
-                            </span>
-                        </label>
-                        {% endfor %}
+        <!-- Tab: 记录 -->
+        <div id="tab-records" class="tab-content active">
+            <!-- Add Record Form -->
+            <section class="card form-card">
+                <h2>➕ 添加记录</h2>
+                <form action="/add" method="POST" id="poopForm">
+                    <!-- Date & Time -->
+                    <div class="form-group">
+                        <label>📅 日期和时间</label>
+                        <input type="datetime-local" id="datetime" name="datetime" required>
+                        <p class="hint">可以记录之前的哦，但不能是未来时间~</p>
                     </div>
-                </div>
-                
-                <!-- Duration -->
-                <div class="form-group">
-                    <label>⏱️ 时长</label>
-                    <div class="duration-inputs">
-                        <div class="duration-field">
-                            <input type="number" id="duration_minutes" name="duration_minutes" min="0" max="60" value="0">
-                            <span>分钟</span>
-                        </div>
-                        <div class="duration-field">
-                            <input type="number" id="duration_seconds" name="duration_seconds" min="0" max="59" value="0">
-                            <span>秒</span>
+                    
+                    <!-- Poop Type -->
+                    <div class="form-group">
+                        <label>💩 大便类型</label>
+                        <div class="type-grid">
+                            {% for type_code, type_name in poop_types %}
+                            <label class="type-option">
+                                <input type="radio" name="type" value="{{ type_code }}" required>
+                                <span class="type-box">
+                                    <span class="poop-icon">{{ ['🫏', '🌭', '🌭', '🍌', '🥚', '🥣', '💧'][loop.index0] }}</span>
+                                    <span class="type-name">{{ type_name }}</span>
+                                </span>
+                            </label>
+                            {% endfor %}
                         </div>
                     </div>
-                </div>
-                
-                <!-- Notes -->
-                <div class="form-group">
-                    <label>📝 备注（可选）</label>
-                    <textarea name="notes" rows="2" placeholder="今天吃了什么？感觉如何？"></textarea>
-                </div>
-                
-                <button type="submit" class="btn btn-primary">保存记录</button>
-            </form>
-        </section>
-
-        <!-- Statistics -->
-        <section class="card stats-card">
-            <h2>📊 统计</h2>
-            <div class="stats-grid">
-                <div class="stat-item">
-                    <span class="stat-value">{{ total }}</span>
-                    <span class="stat-label">总记录</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-value">{{ avg_duration }}</span>
-                    <span class="stat-label">平均时长</span>
-                </div>
-            </div>
-            <!-- Type distribution -->
-            <div class="type-stats">
-                {% for type_code, type_name in poop_types %}
-                {% if type_counts.get(type_code) %}
-                <div class="type-stat">
-                    <span class="type-name">{{ type_name }}</span>
-                    <div class="type-bar">
-                        <div class="type-bar-fill" style="width: {{ (type_counts[type_code] / total * 100)|round }}%"></div>
+                    
+                    <!-- Duration -->
+                    <div class="form-group">
+                        <label>⏱️ 时长</label>
+                        <div class="duration-inputs">
+                            <div class="duration-field">
+                                <input type="number" id="duration_minutes" name="duration_minutes" min="0" max="60" value="0">
+                                <span>分钟</span>
+                            </div>
+                            <div class="duration-field">
+                                <input type="number" id="duration_seconds" name="duration_seconds" min="0" max="59" value="0">
+                                <span>秒</span>
+                            </div>
+                        </div>
                     </div>
-                    <span class="type-count">{{ type_counts[type_code] }}</span>
-                </div>
-                {% endif %}
-                {% endfor %}
-            </div>
-        </section>
-
-        <!-- Records List -->
-        <section class="card records-card">
-            <h2>📋 记录</h2>
-            {% if records %}
-            <div class="records-list">
-                {% for record in records %}
-                <div class="record-item">
-                    <div class="record-header">
-                        <span class="record-datetime">{{ record.datetime }}</span>
-                        {% if record.duration_text %}
-                        <span class="record-duration">⏱️ {{ record.duration_text }}</span>
-                        {% endif %}
+                    
+                    <!-- Notes -->
+                    <div class="form-group">
+                        <label>📝 备注（可选）</label>
+                        <textarea name="notes" rows="2" placeholder="今天吃了什么？感觉如何？"></textarea>
                     </div>
-                    <div class="record-body">
-                        <span class="record-type type-{{ record.type }}">
-                            {% if record.type == 'sheep' %}🫏 羊粪蛋型
-                            {% elif record.type == 'sausage_bumpy' %}🌭 香肠状表面凹凸不平
-                            {% elif record.type == 'sausage_cracked' %}🌭 香肠状表面有裂痕
-                            {% elif record.type == 'banana' %}🍌 香蕉型
-                            {% elif record.type == 'soft_lumps' %}🥚 软团状
-                            {% elif record.type == 'mushy' %}🥣 糊状
-                            {% elif record.type == 'watery' %}💧 水样
+                    
+                    <button type="submit" class="btn btn-primary">保存记录</button>
+                </form>
+            </section>
+
+            <!-- Records List -->
+            <section class="card records-card">
+                <h2>📋 记录</h2>
+                {% if records %}
+                <div class="records-list">
+                    {% for record in records %}
+                    <div class="record-item">
+                        <div class="record-header">
+                            <span class="record-datetime">{{ record.datetime }}</span>
+                            {% if record.duration_text %}
+                            <span class="record-duration">⏱️ {{ record.duration_text }}</span>
                             {% endif %}
-                        </span>
+                        </div>
+                        <div class="record-body">
+                            <span class="record-type type-{{ record.type }}">
+                                {% if record.type == 'sheep' %}🫏 羊粪蛋型
+                                {% elif record.type == 'sausage_bumpy' %}🌭 香肠状表面凹凸不平
+                                {% elif record.type == 'sausage_cracked' %}🌭 香肠状表面有裂痕
+                                {% elif record.type == 'banana' %}🍌 香蕉型
+                                {% elif record.type == 'soft_lumps' %}🥚 软团状
+                                {% elif record.type == 'mushy' %}🥣 糊状
+                                {% elif record.type == 'watery' %}💧 水样
+                                {% endif %}
+                            </span>
+                        </div>
+                        {% if record.notes %}
+                        <p class="record-notes">{{ record.notes }}</p>
+                        {% endif %}
+                        <form action="/delete/{{ record.id }}" method="POST" class="delete-form">
+                            <button type="submit" class="btn btn-small btn-danger">删除</button>
+                        </form>
                     </div>
-                    {% if record.notes %}
-                    <p class="record-notes">{{ record.notes }}</p>
-                    {% endif %}
-                    <form action="/delete/{{ record.id }}" method="POST" class="delete-form">
-                        <button type="submit" class="btn btn-small btn-danger">删除</button>
-                    </form>
+                    {% endfor %}
                 </div>
-                {% endfor %}
-            </div>
-            {% else %}
-            <p class="no-records">还没有记录哦，快添加第一条吧！</p>
-            {% endif %}
-        </section>
+                {% else %}
+                <p class="no-records">还没有记录哦，快添加第一条吧！</p>
+                {% endif %}
+            </section>
+        </div>
 
-        <!-- Footer -->
-        <footer class="app-footer">
-            <p>Made with ❤️ | 星露谷+锈湖混合风格</p>
-        </footer>
+        <!-- Tab: 统计 -->
+        <div id="tab-stats" class="tab-content">
+            <section class="card stats-card">
+                <h2>📊 统计</h2>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-value">{{ total }}</span>
+                        <span class="stat-label">总记录</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">{{ avg_duration }}</span>
+                        <span class="stat-label">平均时长</span>
+                    </div>
+                </div>
+                <!-- Type distribution -->
+                <div class="type-stats">
+                    {% for type_code, type_name in poop_types %}
+                    {% if type_counts.get(type_code) %}
+                    <div class="type-stat">
+                        <span class="type-name">{{ type_name }}</span>
+                        <div class="type-bar">
+                            <div class="type-bar-fill" style="width: {{ (type_counts[type_code] / total * 100)|round }}%"></div>
+                        </div>
+                        <span class="type-count">{{ type_counts[type_code] }}</span>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+            </section>
+        </div>
+
+        <!-- Tab: 我的 -->
+        <div id="tab-profile" class="tab-content">
+            <section class="card profile-card">
+                <h2>👤 我的</h2>
+                <div class="profile-section">
+                    <div class="avatar-section">
+                        <div class="avatar-container">
+                            <img id="avatar-preview" src="" alt="头像" class="avatar-img" style="display:none">
+                            <div class="avatar-placeholder" id="avatar-placeholder">💩</div>
+                        </div>
+                        <form action="/upload-avatar" method="POST" enctype="multipart/form-data" id="avatarForm">
+                            <label class="btn btn-primary upload-btn">
+                                上传头像
+                                <input type="file" name="avatar" accept="image/*" style="display:none" onchange="document.getElementById('avatarForm').submit()">
+                            </label>
+                        </form>
+                        <p class="hint">点击上传你的专属头像</p>
+                    </div>
+                    <div class="profile-info">
+                        <div class="info-item">
+                            <span class="info-label">总记录数</span>
+                            <span class="info-value">{{ total }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">平均时长</span>
+                            <span class="info-value">{{ avg_duration }}</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <button class="nav-item active" data-tab="tab-records">
+                <span class="nav-icon">📝</span>
+                <span class="nav-label">记录</span>
+            </button>
+            <button class="nav-item" data-tab="tab-stats">
+                <span class="nav-icon">📊</span>
+                <span class="nav-label">统计</span>
+            </button>
+            <button class="nav-item" data-tab="tab-profile">
+                <span class="nav-icon">👤</span>
+                <span class="nav-label">我的</span>
+            </button>
+        </nav>
     </div>
 
     <script>
+        // Tab switching
+        const navItems = document.querySelectorAll('.nav-item');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        navItems.forEach(item => {
+            item.addEventListener('click', function() {
+                // Update nav active state
+                navItems.forEach(nav => nav.classList.remove('active'));
+                this.classList.add('active');
+
+                // Show corresponding tab
+                const tabId = this.dataset.tab;
+                tabContents.forEach(tab => tab.classList.remove('active'));
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+
         // Set default datetime to current time
         const now = new Date();
-        // Adjust for timezone
         const timezoneOffset = now.getTimezoneOffset() * 60000;
         const localNow = new Date(now.getTime() - timezoneOffset);
         const datetimeInput = document.getElementById('datetime');
-        datetimeInput.value = localNow.toISOString().slice(0, 16);
-        
-        // Set max to current time (cannot record future)
-        datetimeInput.max = localNow.toISOString().slice(0, 16);
+        if (datetimeInput) {
+            datetimeInput.value = localNow.toISOString().slice(0, 16);
+            datetimeInput.max = localNow.toISOString().slice(0, 16);
+        }
         
         // Quick time buttons
         function setTime(minutesAgo) {
@@ -160,45 +224,70 @@
             date.setMinutes(date.getMinutes() - minutesAgo);
             const timezoneOffset = date.getTimezoneOffset() * 60000;
             const localDate = new Date(date.getTime() - timezoneOffset);
-            datetimeInput.value = localDate.toISOString().slice(0, 16);
+            if (datetimeInput) {
+                datetimeInput.value = localDate.toISOString().slice(0, 16);
+            }
         }
         
         // Add quick time buttons after datetime input
         const hint = document.querySelector('.hint');
-        const quickButtons = document.createElement('div');
-        quickButtons.className = 'quick-buttons';
-        quickButtons.innerHTML = `
-            <button type="button" onclick="setTime(0)">刚刚</button>
-            <button type="button" onclick="setTime(30)">30分钟前</button>
-            <button type="button" onclick="setTime(60)">1小时前</button>
-            <button type="button" onclick="setTime(1440)">昨天</button>
-        `;
-        hint.parentNode.insertBefore(quickButtons, hint.nextSibling);
+        if (hint && datetimeInput) {
+            const quickButtons = document.createElement('div');
+            quickButtons.className = 'quick-buttons';
+            quickButtons.innerHTML = `
+                <button type="button" onclick="setTime(0)">刚刚</button>
+                <button type="button" onclick="setTime(30)">30分钟前</button>
+                <button type="button" onclick="setTime(60)">1小时前</button>
+                <button type="button" onclick="setTime(1440)">昨天</button>
+            `;
+            hint.parentNode.insertBefore(quickButtons, hint.nextSibling);
+        }
         
-        // Bug 2: Close datetime picker on second click (click to select, don't keep hovering)
+        // Close datetime picker on second click
         let datetimePickerOpen = false;
-        datetimeInput.addEventListener('focus', function() {
-            if (datetimePickerOpen) {
-                this.blur();
-            } else {
-                datetimePickerOpen = true;
-                // Open the picker
-                this.showPicker && this.showPicker();
-            }
-        });
-        datetimeInput.addEventListener('blur', function() {
-            // Delay reset so the change event can fire first
-            setTimeout(() => { datetimePickerOpen = false; }, 200);
-        });
+        if (datetimeInput) {
+            datetimeInput.addEventListener('focus', function() {
+                if (datetimePickerOpen) {
+                    this.blur();
+                } else {
+                    datetimePickerOpen = true;
+                    this.showPicker && this.showPicker();
+                }
+            });
+            datetimeInput.addEventListener('blur', function() {
+                setTimeout(() => { datetimePickerOpen = false; }, 200);
+            });
+        }
         
-        // Bug 3: Auto-select "0" in duration inputs when focusing
+        // Auto-select "0" in duration inputs when focusing
         const durationInputs = document.querySelectorAll('#duration_minutes, #duration_seconds');
         durationInputs.forEach(function(input) {
             input.addEventListener('focus', function() {
-                // Select all text so typing replaces the "0"
                 this.select();
             });
         });
+
+        // Check for uploaded avatar
+        const avatarImg = document.getElementById('avatar-preview');
+        const avatarPlaceholder = document.getElementById('avatar-placeholder');
+        const extensions = ['png', 'jpg', 'jpeg', 'gif', 'webp'];
+        let avatarFound = false;
+        function tryAvatar(index) {
+            if (index >= extensions.length || avatarFound) return;
+            const ext = extensions[index];
+            const img = new Image();
+            img.onload = function() {
+                avatarImg.src = '/static/uploads/avatar.' + ext;
+                avatarImg.style.display = 'block';
+                avatarPlaceholder.style.display = 'none';
+                avatarFound = true;
+            };
+            img.onerror = function() {
+                tryAvatar(index + 1);
+            };
+            img.src = '/static/uploads/avatar.' + ext;
+        }
+        tryAvatar(0);
     </script>
 </body>
 </html>

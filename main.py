@@ -4,10 +4,12 @@ FastAPI backend with SQLite database
 星露谷+锈湖混合风格
 """
 
+import os
 import sqlite3
+import shutil
 from datetime import datetime
 from typing import List, Optional
-from fastapi import FastAPI, Request, Form
+from fastapi import FastAPI, Request, Form, UploadFile, File
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
@@ -159,6 +161,21 @@ async def delete_record(request: Request, record_id: int):
     conn.close()
     
     # Redirect to home page
+    return await home(request)
+
+@app.post("/upload-avatar", response_class=HTMLResponse)
+async def upload_avatar(request: Request, avatar: UploadFile = File(...)):
+    """Upload avatar image"""
+    # Ensure uploads directory exists
+    os.makedirs("static/uploads", exist_ok=True)
+    
+    # Save with consistent filename
+    file_ext = os.path.splitext(avatar.filename)[1] if avatar.filename else ".png"
+    file_path = f"static/uploads/avatar{file_ext}"
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(avatar.file, buffer)
+    
+    # Redirect back to home
     return await home(request)
 
 if __name__ == "__main__":

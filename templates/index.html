@@ -18,6 +18,45 @@
 
         <!-- Tab: 记录 -->
         <div id="tab-records" class="tab-content active">
+            <!-- Weekly Summary -->
+            <section class="card weekly-card" id="weeklySummary">
+                <div class="weekly-header" onclick="toggleWeeklySummary()">
+                    <h2>📊 本周拉屎总结</h2>
+                    <span class="toggle-icon" id="weeklyToggle">▶</span>
+                </div>
+                <div class="weekly-body" id="weeklyBody" style="display: none;">
+                    <div class="weekly-period">
+                        {{ week_summary.start_date }} - {{ week_summary.end_date }}
+                    </div>
+                    <div class="weekly-stats">
+                        <div class="weekly-stat">
+                            <span class="weekly-stat-icon">💩</span>
+                            <span class="weekly-stat-value">{{ week_summary.poop_count }}</span>
+                            <span class="weekly-stat-label">本周拉屎次数</span>
+                        </div>
+                        <div class="weekly-stat">
+                            <span class="weekly-stat-icon">⏱️</span>
+                            <span class="weekly-stat-value">{{ week_summary.total_duration }}</span>
+                            <span class="weekly-stat-label">本周拉屎总时长</span>
+                        </div>
+                        <div class="weekly-stat">
+                            <span class="weekly-stat-icon">❤️</span>
+                            <span class="weekly-stat-value">{{ week_summary.avg_health }}</span>
+                            <span class="weekly-stat-label">平均健康评分</span>
+                        </div>
+                    </div>
+                    <div class="weekly-health-level">
+                        <span class="health-badge">{{ week_summary.health_level }}</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Diet Suggestion -->
+            <section class="card diet-card">
+                <h2>🥗 饮食建议</h2>
+                <p class="diet-text">{{ diet_suggestion }}</p>
+            </section>
+
             <!-- Add Record Form -->
             <section class="card form-card">
                 <h2>➕ 添加记录</h2>
@@ -94,6 +133,11 @@
                                 {% elif record.type == 'watery' %}💧 水样
                                 {% endif %}
                             </span>
+                            <span class="record-health-score" style="color: {{ poop_colors.get(record.type, '#888') }};">
+                                {% if poop_health_scores.get(record.type) %}
+                                    健康评分: {{ poop_health_scores[record.type] }}/10
+                                {% endif %}
+                            </span>
                         </div>
                         {% if record.notes %}
                         <p class="record-notes">{{ record.notes }}</p>
@@ -137,6 +181,34 @@
                     </div>
                     {% endif %}
                     {% endfor %}
+                </div>
+            </section>
+
+            <!-- iOS-style Calendar -->
+            <section class="card calendar-card">
+                <h2>📅 日历</h2>
+                <div class="calendar-container">
+                    <div class="calendar-header">
+                        <button class="cal-nav" onclick="changeMonth(-1)">‹</button>
+                        <span class="cal-title" id="calTitle"></span>
+                        <button class="cal-nav" onclick="changeMonth(1)">›</button>
+                    </div>
+                    <div class="calendar-weekdays">
+                        <span>日</span>
+                        <span>一</span>
+                        <span>二</span>
+                        <span>三</span>
+                        <span>四</span>
+                        <span>五</span>
+                        <span>六</span>
+                    </div>
+                    <div class="calendar-grid" id="calendarGrid"></div>
+                </div>
+                <div class="calendar-legend">
+                    <span class="legend-item"><span class="legend-dot" style="background: #5c8a4a"></span> 健康</span>
+                    <span class="legend-item"><span class="legend-dot" style="background: #f0c040"></span> 偏软</span>
+                    <span class="legend-item"><span class="legend-dot" style="background: #c76b4a"></span> 腹泻倾向</span>
+                    <span class="legend-item"><span class="legend-dot" style="background: #8b6f47"></span> 便秘</span>
                 </div>
             </section>
         </div>
@@ -288,6 +360,141 @@
             img.src = '/static/uploads/avatar.' + ext;
         }
         tryAvatar(0);
+
+        // ===== Weekly Summary Toggle =====
+        function toggleWeeklySummary() {
+            const body = document.getElementById('weeklyBody');
+            const toggle = document.getElementById('weeklyToggle');
+            if (body.style.display === 'none') {
+                body.style.display = 'block';
+                toggle.textContent = '▼';
+            } else {
+                body.style.display = 'none';
+                toggle.textContent = '▶';
+            }
+        }
+
+        // ===== iOS-style Calendar =====
+        let currentYear, currentMonth;
+
+        function initCalendar() {
+            const now = new Date();
+            currentYear = now.getFullYear();
+            currentMonth = now.getMonth() + 1; // 1-based
+            renderCalendar(currentYear, currentMonth);
+        }
+
+        function changeMonth(delta) {
+            currentMonth += delta;
+            if (currentMonth > 12) {
+                currentMonth = 1;
+                currentYear++;
+            } else if (currentMonth < 1) {
+                currentMonth = 12;
+                currentYear--;
+            }
+            renderCalendar(currentYear, currentMonth);
+        }
+
+        function renderCalendar(year, month) {
+            const title = document.getElementById('calTitle');
+            title.textContent = year + '年' + month + '月';
+
+            const grid = document.getElementById('calendarGrid');
+            grid.innerHTML = '';
+
+            // First day of month (0=Sun, 1=Mon, ..., 6=Sat)
+            const firstDay = new Date(year, month - 1, 1).getDay();
+            // Days in month
+            const daysInMonth = new Date(year, month, 0).getDate();
+            // Days in previous month
+            const daysInPrevMonth = new Date(year, month - 1, 0).getDate();
+
+            // Fetch calendar data
+            fetch(`/calendar-data?year=${year}&month=${month}`)
+                .then(res => res.json())
+                .then(data => {
+                    const daysData = data.days || {};
+                    const maxDuration = data.max_duration || 1;
+
+                    // Previous month's trailing days
+                    for (let i = firstDay - 1; i >= 0; i--) {
+                        const day = daysInPrevMonth - i;
+                        const cell = document.createElement('div');
+                        cell.className = 'cal-day cal-day-other';
+                        cell.textContent = day;
+                        grid.appendChild(cell);
+                    }
+
+                    // Current month's days
+                    for (let d = 1; d <= daysInMonth; d++) {
+                        const cell = document.createElement('div');
+                        cell.className = 'cal-day';
+                        
+                        const dayNum = document.createElement('span');
+                        dayNum.className = 'cal-day-num';
+                        dayNum.textContent = d;
+                        cell.appendChild(dayNum);
+
+                        // Check if today
+                        const today = new Date();
+                        if (d === today.getDate() && month === today.getMonth() + 1 && year === today.getFullYear()) {
+                            cell.classList.add('cal-day-today');
+                        }
+
+                        // Add poop dots if records exist for this day
+                        if (daysData[d] && daysData[d].length > 0) {
+                            cell.classList.add('cal-day-has-poop');
+                            const dotsContainer = document.createElement('div');
+                            dotsContainer.className = 'cal-dots';
+                            
+                            daysData[d].forEach(record => {
+                                const dot = document.createElement('div');
+                                dot.className = 'cal-dot';
+                                dot.style.background = record.color;
+                                // Scale height based on duration
+                                const heightRatio = Math.min(record.duration / maxDuration, 1);
+                                const height = Math.max(6, Math.round(6 + heightRatio * 14));
+                                dot.style.height = height + 'px';
+                                dot.style.width = height + 'px';
+                                dot.title = `时长: ${Math.floor(record.duration/60)}分${record.duration%60}秒 | 健康评分: ${record.health_score}/10`;
+                                dotsContainer.appendChild(dot);
+                            });
+                            
+                            cell.appendChild(dotsContainer);
+                        }
+
+                        grid.appendChild(cell);
+                    }
+
+                    // Next month's leading days to fill the grid
+                    const totalCells = firstDay + daysInMonth;
+                    const remaining = 7 - (totalCells % 7);
+                    if (remaining < 7) {
+                        for (let d = 1; d <= remaining; d++) {
+                            const cell = document.createElement('div');
+                            cell.className = 'cal-day cal-day-other';
+                            cell.textContent = d;
+                            grid.appendChild(cell);
+                        }
+                    }
+                })
+                .catch(err => {
+                    console.error('Failed to load calendar data:', err);
+                });
+        }
+
+        // Initialize calendar when stats tab is shown
+        let calendarInitialized = false;
+        document.querySelector('[data-tab="tab-stats"]').addEventListener('click', function() {
+            if (!calendarInitialized) {
+                initCalendar();
+                calendarInitialized = true;
+            }
+        });
+
+        // Also init calendar if stats tab is already visible (e.g. on page load)
+        // We'll init on first click only
     </script>
 </body>
 </html>

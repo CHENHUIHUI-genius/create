@@ -7,10 +7,10 @@ FastAPI backend with SQLite database
 import os
 import sqlite3
 import shutil
-from datetime import datetime
+from datetime import datetime, timedelta, date
 from typing import List, Optional
-from fastapi import FastAPI, Request, Form, UploadFile, File
-from fastapi.responses import HTMLResponse
+from fastapi import FastAPI, Request, Form, UploadFile, File, Query
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -35,6 +35,29 @@ POOP_TYPES = [
     ("mushy", "糊状"),
     ("watery", "水样"),
 ]
+
+# 健康评分 (1-10, 10最健康)
+# Bristol分型: 1-2便秘, 3-4理想, 5-7腹泻倾向
+POOP_HEALTH_SCORE = {
+    "sheep": 2,           # 便秘
+    "sausage_bumpy": 4,   # 轻度便秘
+    "sausage_cracked": 8, # 接近理想
+    "banana": 10,         # 理想
+    "soft_lumps": 6,      # 偏软
+    "mushy": 3,           # 腹泻倾向
+    "watery": 1,          # 腹泻
+}
+
+# 颜色映射 (用于日历点)
+POOP_COLORS = {
+    "sheep": "#8b6f47",       # 棕色 - 便秘
+    "sausage_bumpy": "#c4a87c", # 浅棕
+    "sausage_cracked": "#7cb342", # 浅绿 - 健康
+    "banana": "#5c8a4a",      # 绿色 - 最健康
+    "soft_lumps": "#f0c040",  # 金色 - 偏软
+    "mushy": "#c76b4a",       # 锈红 - 腹泻倾向
+    "watery": "#1b7a8a",      # 青色 - 水样
+}
 
 def init_db():
     """Initialize SQLite database with required table"""
@@ -69,6 +92,70 @@ class Record(BaseModel):
     duration: int = 0
     notes: Optional[str] = None
 
+def get_week_range(dt=None):
+    """Get Monday 00:00 and Sunday 23:59 of the current week"""
+    if dt is None:
+        dt = datetime.now()
+    # Monday = 0, Sunday = 6
+    monday = dt - timedelta(days=dt.weekday())
+    monday_start = monday.replace(hour=0, minute=0, second=0, microsecond=0)
+    sunday_end = (monday_start + timedelta(days=6)).replace(hour=23, minute=59, second=59)
+    return monday_start, sunday_end
+
+def get_health_level(score):
+    """Get health level description based on score"""
+    if score >= 8:
+        return "非常健康 🎉"
+    elif score >= 6:
+        return "良好 👍"
+    elif score >= 4:
+        return "一般 ⚠️"
+    else:
+        return "需要注意 ❤️‍🩹"
+
+def get_diet_suggestion(records):
+    """Simple rule-based diet suggestions based on recent records"""
+    if not records:
+        return "暂无数据，开始记录后会有饮食建议哦~"
+    
+    # Count types in recent records (last 7 days)
+    type_counts = {}
+    for r in records:
+        t = r['type']
+        type_counts[t] = type_counts.get(t, 0) + 1
+    
+    total = sum(type_counts.values())
+    if total == 0:
+        return "暂无数据，开始记录后会有饮食建议哦~"
+    
+    # Calculate percentages
+    constipated_types = ['sheep', 'sausage_bumpy']
+    ideal_types = ['sausage_cracked', 'banana']
+    diarrhea_types = ['soft_lumps', 'mushy', 'watery']
+    
+    constipated_pct = sum(type_counts.get(t, 0) for t in constipated_types) / total
+    diarrhea_pct = sum(type_counts.get(t, 0) for t in diarrhea_types) / total
+    ideal_pct = sum(type_counts.get(t, 0) for t in ideal_types) / total
+    
+    if constipated_pct > 0.5:
+        return "🥦 最近有便秘倾向，建议多喝水、多吃高纤维食物（蔬菜、水果、全谷物），适当运动促进肠道蠕动。"
+    elif diarrhea_pct > 0.5:
+        return "🍚 最近肠道偏软，建议吃易消化的食物（粥、面条），避免生冷油腻，可以补充益生菌。"
+    elif ideal_pct > 0.6:
+        return "🌟 肠道状态很好！继续保持均衡饮食，多吃蔬果，保持规律作息。"
+    else:
+        return "🥗 肠道状态中等，建议保持饮食均衡，多吃蔬菜水果，适量饮水，规律作息。"
+
+def format_duration(seconds):
+    """Convert seconds to readable format"""
+    if not seconds:
+        return ""
+    minutes = seconds // 60
+    secs = seconds % 60
+    if minutes > 0:
+        return f"{minutes}分{secs}秒"
+    return f"{secs}秒"
+
 # Routes
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
@@ -83,15 +170,7 @@ async def home(request: Request):
     
     # Convert duration from seconds to readable format
     for record in records:
-        if record.get('duration'):
-            minutes = record['duration'] // 60
-            seconds = record['duration'] % 60
-            if minutes > 0:
-                record['duration_text'] = f"{minutes}分{seconds}秒"
-            else:
-                record['duration_text'] = f"{seconds}秒"
-        else:
-            record['duration_text'] = ""
+        record['duration_text'] = format_duration(record.get('duration'))
     
     # Get statistics
     cursor.execute("SELECT COUNT(*) as total FROM records")
@@ -103,12 +182,50 @@ async def home(request: Request):
     # Get average duration
     cursor.execute("SELECT AVG(duration) as avg_duration FROM records WHERE duration > 0")
     avg_duration = cursor.fetchone()["avg_duration"]
-    if avg_duration:
-        avg_minutes = int(avg_duration) // 60
-        avg_seconds = int(avg_duration) % 60
-        avg_duration_text = f"{avg_minutes}分{avg_seconds}秒" if avg_minutes > 0 else f"{avg_seconds}秒"
+    avg_duration_text = format_duration(int(avg_duration)) if avg_duration else "-"
+    
+    # === Weekly Summary ===
+    week_start, week_end = get_week_range()
+    week_start_str = week_start.strftime("%Y-%m-%d %H:%M:%S")
+    week_end_str = week_end.strftime("%Y-%m-%d %H:%M:%S")
+    
+    cursor.execute(
+        "SELECT * FROM records WHERE datetime >= ? AND datetime <= ? ORDER BY datetime",
+        (week_start_str, week_end_str)
+    )
+    week_records = [dict(row) for row in cursor.fetchall()]
+    
+    week_total_duration = sum(r.get('duration', 0) for r in week_records)
+    week_poop_count = len(week_records)
+    
+    # Calculate average health score for the week
+    if week_records:
+        week_health_scores = [POOP_HEALTH_SCORE.get(r['type'], 5) for r in week_records]
+        week_avg_health = sum(week_health_scores) / len(week_health_scores)
+        week_health_level = get_health_level(week_avg_health)
     else:
-        avg_duration_text = "-"
+        week_avg_health = 0
+        week_health_level = "暂无数据"
+    
+    week_summary = {
+        'start_date': week_start.strftime("%m/%d"),
+        'end_date': week_end.strftime("%m/%d"),
+        'poop_count': week_poop_count,
+        'total_duration': format_duration(week_total_duration),
+        'total_duration_seconds': week_total_duration,
+        'avg_health': round(week_avg_health, 1),
+        'health_level': week_health_level,
+    }
+    
+    # === Diet Suggestion ===
+    # Get last 7 days of records for diet analysis
+    seven_days_ago = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d %H:%M:%S")
+    cursor.execute(
+        "SELECT * FROM records WHERE datetime >= ? ORDER BY datetime DESC",
+        (seven_days_ago,)
+    )
+    recent_records = [dict(row) for row in cursor.fetchall()]
+    diet_suggestion = get_diet_suggestion(recent_records)
     
     conn.close()
     
@@ -118,7 +235,70 @@ async def home(request: Request):
         "total": total,
         "type_counts": type_counts,
         "poop_types": POOP_TYPES,
-        "avg_duration": avg_duration_text
+        "avg_duration": avg_duration_text,
+        "week_summary": week_summary,
+        "diet_suggestion": diet_suggestion,
+        "poop_health_scores": POOP_HEALTH_SCORE,
+        "poop_colors": POOP_COLORS,
+    })
+
+@app.get("/calendar-data")
+async def calendar_data(year: int = Query(None), month: int = Query(None)):
+    """Get calendar data for a specific month"""
+    now = datetime.now()
+    if year is None:
+        year = now.year
+    if month is None:
+        month = now.month
+    
+    # Calculate month range
+    if month == 12:
+        next_month = 1
+        next_year = year + 1
+    else:
+        next_month = month + 1
+        next_year = year
+    
+    month_start = f"{year:04d}-{month:02d}-01 00:00:00"
+    month_end = f"{next_year:04d}-{next_month:02d}-01 00:00:00"
+    
+    conn = sqlite3.connect(DB_NAME)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    
+    cursor.execute(
+        "SELECT * FROM records WHERE datetime >= ? AND datetime < ? ORDER BY datetime",
+        (month_start, month_end)
+    )
+    records = [dict(row) for row in cursor.fetchall()]
+    conn.close()
+    
+    # Group records by day
+    days_data = {}
+    for r in records:
+        try:
+            dt = datetime.strptime(r['datetime'], "%Y-%m-%d %H:%M")
+        except ValueError:
+            continue
+        day = dt.day
+        if day not in days_data:
+            days_data[day] = []
+        days_data[day].append({
+            'type': r['type'],
+            'duration': r.get('duration', 0),
+            'color': POOP_COLORS.get(r['type'], '#888888'),
+            'health_score': POOP_HEALTH_SCORE.get(r['type'], 5),
+        })
+    
+    # Calculate max duration for scaling
+    all_durations = [r['duration'] for day_records in days_data.values() for r in day_records]
+    max_duration = max(all_durations) if all_durations else 1
+    
+    return JSONResponse({
+        'year': year,
+        'month': month,
+        'days': days_data,
+        'max_duration': max_duration,
     })
 
 @app.post("/add", response_class=HTMLResponse)

@@ -797,3 +797,280 @@ body::before {
     background: rgba(240, 192, 64, 0.3);
     color: var(--text);
 }
+
+/* ===== Weekly Summary Card ===== */
+.weekly-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+}
+
+.weekly-header h2 {
+    margin-bottom: 0;
+}
+
+.toggle-icon {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    transition: transform 0.3s;
+}
+
+.weekly-body {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(92, 138, 74, 0.2);
+}
+
+.weekly-period {
+    text-align: center;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 14px;
+}
+
+.weekly-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.weekly-stat {
+    background: rgba(26, 26, 46, 0.4);
+    border-radius: 12px;
+    padding: 12px 8px;
+    text-align: center;
+    border: 1px solid rgba(92, 138, 74, 0.15);
+}
+
+.weekly-stat-icon {
+    display: block;
+    font-size: 1.4rem;
+    margin-bottom: 4px;
+}
+
+.weekly-stat-value {
+    display: block;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--sd-gold);
+}
+
+.weekly-stat-label {
+    display: block;
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+.weekly-health-level {
+    text-align: center;
+}
+
+.health-badge {
+    display: inline-block;
+    padding: 6px 20px;
+    border-radius: 20px;
+    background: rgba(92, 138, 74, 0.2);
+    border: 1px solid rgba(92, 138, 74, 0.3);
+    color: var(--sd-green-light);
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+/* ===== Diet Suggestion Card ===== */
+.diet-card {
+    background: rgba(15, 76, 92, 0.15);
+    border-color: rgba(27, 122, 138, 0.3);
+}
+
+.diet-card::before {
+    background: linear-gradient(90deg, var(--rl-teal), var(--rl-mint), var(--rl-teal-light));
+}
+
+.diet-text {
+    font-size: 0.9rem;
+    line-height: 1.7;
+    color: var(--text-light);
+}
+
+/* ===== Record Health Score ===== */
+.record-health-score {
+    font-size: 0.7rem;
+    margin-left: 8px;
+    font-weight: 500;
+}
+
+/* ===== iOS-style Calendar ===== */
+.calendar-container {
+    user-select: none;
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0 16px;
+}
+
+.cal-nav {
+    background: none;
+    border: none;
+    color: var(--sd-gold);
+    font-size: 1.6rem;
+    cursor: pointer;
+    padding: 4px 12px;
+    border-radius: 8px;
+    transition: background 0.2s;
+    font-family: inherit;
+    line-height: 1;
+}
+
+.cal-nav:hover {
+    background: rgba(240, 192, 64, 0.1);
+}
+
+.cal-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+    margin-bottom: 8px;
+}
+
+.calendar-weekdays span {
+    text-align: center;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    padding: 6px 0;
+    font-weight: 500;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+}
+
+.cal-day {
+    aspect-ratio: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 4px 2px;
+    border-radius: 8px;
+    background: rgba(26, 26, 46, 0.2);
+    min-height: 48px;
+    position: relative;
+}
+
+.cal-day-other {
+    opacity: 0.3;
+}
+
+.cal-day-today {
+    background: rgba(240, 192, 64, 0.1);
+    border: 1px solid rgba(240, 192, 64, 0.3);
+}
+
+.cal-day-num {
+    font-size: 0.75rem;
+    color: var(--text);
+    font-weight: 500;
+    margin-bottom: 2px;
+}
+
+.cal-day-today .cal-day-num {
+    color: var(--sd-gold);
+    font-weight: 700;
+}
+
+.cal-dots {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    justify-content: center;
+    align-items: flex-end;
+    flex: 1;
+    padding-bottom: 2px;
+}
+
+.cal-dot {
+    border-radius: 50%;
+    min-width: 6px;
+    min-height: 6px;
+    transition: transform 0.2s;
+    cursor: pointer;
+}
+
+.cal-dot:hover {
+    transform: scale(1.5);
+    box-shadow: 0 0 6px rgba(255, 255, 255, 0.3);
+}
+
+.calendar-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(92, 138, 74, 0.15);
+    justify-content: center;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+}
+
+.legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+/* ===== Responsive Calendar ===== */
+@media (max-width: 480px) {
+    .weekly-stats {
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 6px;
+    }
+    
+    .weekly-stat {
+        padding: 10px 4px;
+    }
+    
+    .weekly-stat-value {
+        font-size: 1rem;
+    }
+    
+    .weekly-stat-label {
+        font-size: 0.6rem;
+    }
+    
+    .cal-day {
+        min-height: 40px;
+        padding: 2px 1px;
+    }
+    
+    .cal-day-num {
+        font-size: 0.65rem;
+    }
+    
+    .cal-dot {
+        min-width: 5px;
+        min-height: 5px;
+    }
+}

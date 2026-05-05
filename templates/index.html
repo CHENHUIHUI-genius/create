@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Health Tracker</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Daily Health Tracker</h1>
+            <p class="subtitle">Bowel Movement Tracking</p>
+        </header>
+
+        <!-- Add Record Form -->
+        <section class="card form-section">
+            <h2>Add New Record</h2>
+            <form action="/add" method="POST">
+                <div class="form-group">
+                    <label for="datetime">Date & Time</label>
+                    <input type="datetime-local" id="datetime" name="datetime" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="type">Type</label>
+                    <select id="type" name="type" required>
+                        <option value="normal">Normal</option>
+                        <option value="diarrhea">Diarrhea</option>
+                        <option value="constipation">Constipation</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="notes">Notes (optional)</label>
+                    <textarea id="notes" name="notes" rows="2" placeholder="Any additional notes..."></textarea>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">Add Record</button>
+            </form>
+        </section>
+
+        <!-- Statistics -->
+        <section class="card stats-section">
+            <h2>Statistics</h2>
+            <div class="stats-grid">
+                <div class="stat-card stat-total">
+                    <span class="stat-value">{{ total }}</span>
+                    <span class="stat-label">Total Records</span>
+                </div>
+                <div class="stat-card stat-normal">
+                    <span class="stat-value">{{ type_counts.get('normal', 0) }}</span>
+                    <span class="stat-label">Normal</span>
+                </div>
+                <div class="stat-card stat-diarrhea">
+                    <span class="stat-value">{{ type_counts.get('diarrhea', 0) }}</span>
+                    <span class="stat-label">Diarrhea</span>
+                </div>
+                <div class="stat-card stat-constipation">
+                    <span class="stat-value">{{ type_counts.get('constipation', 0) }}</span>
+                    <span class="stat-label">Constipation</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Records List -->
+        <section class="card records-section">
+            <h2>Records</h2>
+            {% if records %}
+            <div class="records-list">
+                {% for record in records %}
+                <div class="record-item">
+                    <div class="record-info">
+                        <span class="record-datetime">{{ record.datetime }}</span>
+                        <span class="record-type type-{{ record.type }}">{{ record.type|capitalize }}</span>
+                    </div>
+                    {% if record.notes %}
+                    <p class="record-notes">{{ record.notes }}</p>
+                    {% endif %}
+                    <form action="/delete/{{ record.id }}" method="POST" class="delete-form">
+                        <button type="submit" class="btn btn-small btn-danger">Delete</button>
+                    </form>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="no-records">No records yet. Add your first record above!</p>
+            {% endif %}
+        </section>
+    </div>
+
+    <script>
+        // Set default datetime to current time
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        document.getElementById('datetime').value = now.toISOString().slice(0, 16);
+    </script>
+</body>
+</html>

@@ -95,6 +95,9 @@ body::before {
     border-color: var(--sd-gold); box-shadow: 0 0 0 3px rgba(240,192,64,0.15);
 }
 .form-group textarea { resize: vertical; min-height: 60px; }
+/* Fix Safari date input overflowing */
+input[type="datetime-local"] { min-width: 0; width: 100%; box-sizing: border-box; }
+input[type="datetime-local"]::-webkit-date-and-time-value { min-width: 0; }
 .hint { font-size: 0.75rem; color: var(--text-muted); margin-top: 6px; font-style: italic; }
 
 /* Quick buttons */
@@ -117,32 +120,6 @@ body::before {
 .poop-icon-img { width: 48px; height: 48px; object-fit: contain; border-radius: 8px; display: block; }
 .poop-icon-emoji { font-size: 1.8rem; display: none; align-items: center; justify-content: center; }
 .type-name { font-size: 0.7rem; color: var(--text-light); line-height: 1.3; word-break: break-all; }
-
-/* Add type button */
-.add-type-box {
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
-    padding: 10px 6px; border: 2px dashed rgba(92,138,74,0.3); border-radius: 12px;
-    background: rgba(26,26,46,0.2); cursor: pointer; transition: all 0.25s; text-align: center;
-    min-height: 100px;
-}
-.add-type-box:hover { border-color: var(--sd-gold); background: rgba(240,192,64,0.08); }
-.add-type-icon { font-size: 2rem; color: var(--text-muted); line-height: 1; }
-.add-type-label { font-size: 0.7rem; color: var(--text-muted); }
-
-/* Custom type management */
-.custom-type-item {
-    display: flex; align-items: center; gap: 10px; padding: 10px 12px;
-    background: rgba(26,26,46,0.4); border-radius: 10px; border: 1px solid rgba(92,138,74,0.15);
-    margin-bottom: 8px;
-}
-.custom-type-item img { width: 36px; height: 36px; object-fit: contain; border-radius: 6px; }
-.custom-type-item .ct-name { flex: 1; font-size: 0.85rem; color: var(--text); }
-.custom-type-item .ct-code { font-size: 0.7rem; color: var(--text-muted); }
-.custom-type-item .ct-delete {
-    background: none; border: 1px solid rgba(199,107,74,0.4); color: var(--rl-rust-light);
-    padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; font-family: inherit;
-}
-.custom-type-item .ct-delete:hover { background: rgba(199,107,74,0.15); }
 
 /* Duration */
 .duration-inputs { display: flex; gap: 12px; align-items: center; }
@@ -514,17 +491,6 @@ body::before {
                 </div>
             </section>
 
-            <!-- Custom Poop Types Management -->
-            <section class="card">
-                <h2>🔧 自定义大便类型</h2>
-                <p class="hint" style="margin-bottom:12px;">添加你自定义的大便类型，图片请放入 static/icons/ 目录</p>
-                <div id="customTypesList"></div>
-                <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
-                    <input type="text" id="newCustomCode" class="profile-name-input" placeholder="英文标识 (如: my_type)" style="flex:1;min-width:100px;" maxlength="30">
-                    <input type="text" id="newCustomName" class="profile-name-input" placeholder="显示名称 (如: 我的类型)" style="flex:1;min-width:100px;" maxlength="20">
-                    <button class="btn btn-small btn-primary" onclick="addCustomType()" style="width:auto;">＋添加</button>
-                </div>
-            </section>
         </div>
 
         <!-- Bottom Navigation -->
@@ -586,32 +552,19 @@ const BUILTIN_COLORS = {
     withblood: '#9b4a3a',
 };
 
-// 获取所有类型（内置 + 自定义）
+// 获取所有类型（仅内置）
 function getAllTypes() {
-    const custom = getCustomTypes();
-    return [...BUILTIN_POOP_TYPES, ...custom];
+    return BUILTIN_POOP_TYPES;
 }
 
 function getHealthScore(code) {
     if (BUILTIN_HEALTH_SCORE[code] !== undefined) return BUILTIN_HEALTH_SCORE[code];
-    return 5; // 自定义类型默认5分
+    return 5;
 }
 
 function getColor(code) {
     if (BUILTIN_COLORS[code] !== undefined) return BUILTIN_COLORS[code];
-    return '#888888'; // 自定义类型默认灰色
-}
-
-// 自定义类型存储
-function getCustomTypes() {
-    try {
-        const raw = localStorage.getItem('poop_tracker_custom_types');
-        return raw ? JSON.parse(raw) : [];
-    } catch(e) { return []; }
-}
-
-function saveCustomTypes(types) {
-    localStorage.setItem('poop_tracker_custom_types', JSON.stringify(types));
+    return '#888888';
 }
 
 // 默认数据
@@ -737,11 +690,9 @@ function renderAll() {
     renderWeeklySummary();
     renderDietSuggestion();
     renderProfileSwitcher();
-    renderCustomTypesList();
     if (calendarInitialized) renderCalendar(calendarYear, calendarMonth);
 }
 
-// Render type grid (with "+" button for custom types)
 function renderTypeGrid() {
     const grid = document.getElementById('typeGrid');
     const allTypes = getAllTypes();
@@ -762,14 +713,6 @@ function renderTypeGrid() {
             </label>
         `;
     }).join('');
-
-    // Add "+" button
-    html += `
-        <div class="add-type-box" onclick="showAddTypeDialog()">
-            <span class="add-type-icon">＋</span>
-            <span class="add-type-label">自定义类型</span>
-        </div>
-    `;
     
     grid.innerHTML = html;
 }
@@ -782,10 +725,11 @@ function renderRecords() {
         return;
     }
     const allTypes = getAllTypes();
-    container.innerHTML = records.map(r => {
+    // 从新到旧排序
+    const sortedRecords = [...records].sort((a, b) => new Date(b.datetime) - new Date(a.datetime));
+    container.innerHTML = sortedRecords.map(r => {
         const typeInfo = allTypes.find(t => t.code === r.type);
         const typeName = typeInfo ? typeInfo.name : r.type;
-        const emoji = typeInfo ? (typeInfo.emoji || '💩') : '💩';
         const healthScore = getHealthScore(r.type);
         const color = getColor(r.type);
         const durationText = formatDuration(r.duration);
@@ -796,7 +740,10 @@ function renderRecords() {
                     ${durationText ? `<span class="record-duration">⏱️ ${durationText}</span>` : ''}
                 </div>
                 <div class="record-body">
-                    <span class="record-type type-${r.type}">${emoji} ${typeName}</span>
+                    <span class="record-type type-${r.type}">
+                        <img class="record-type-img" src="/static/icons/poop_${r.type}.png" alt="${typeName}" onerror="this.style.display='none'" style="width:20px;height:20px;vertical-align:middle;margin-right:4px;border-radius:4px;">
+                        ${typeName}
+                    </span>
                     <span class="record-health-score" style="color: ${color};">健康评分: ${healthScore}/10</span>
                 </div>
                 ${r.notes ? `<p class="record-notes">${r.notes}</p>` : ''}
@@ -900,61 +847,6 @@ function renderProfileSwitcher() {
 }
 
 // ============================================
-// Custom Type Management
-// ============================================
-
-function renderCustomTypesList() {
-    const container = document.getElementById('customTypesList');
-    const custom = getCustomTypes();
-    if (custom.length === 0) {
-        container.innerHTML = '<p class="hint">暂无自定义类型</p>';
-        return;
-    }
-    container.innerHTML = custom.map(t => `
-        <div class="custom-type-item">
-            <img src="/static/icons/poop_${t.code}.png" alt="${t.name}" onerror="this.style.display='none'">
-            <span class="ct-name">${t.name}</span>
-            <span class="ct-code">${t.code}</span>
-            <button class="ct-delete" onclick="deleteCustomType('${t.code}')">删除</button>
-        </div>
-    `).join('');
-}
-
-function addCustomType() {
-    const code = document.getElementById('newCustomCode').value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '_');
-    const name = document.getElementById('newCustomName').value.trim();
-    if (!code || !name) { alert('请填写标识和名称'); return; }
-    
-    // Check if code already exists
-    const allTypes = getAllTypes();
-    if (allTypes.find(t => t.code === code)) { alert('该标识已存在'); return; }
-    
-    const custom = getCustomTypes();
-    custom.push({ code: code, name: name, emoji: '💩' });
-    saveCustomTypes(custom);
-    
-    document.getElementById('newCustomCode').value = '';
-    document.getElementById('newCustomName').value = '';
-    renderAll();
-}
-
-function deleteCustomType(code) {
-    if (!confirm(`确定删除类型"${code}"吗？`)) return;
-    let custom = getCustomTypes();
-    custom = custom.filter(t => t.code !== code);
-    saveCustomTypes(custom);
-    renderAll();
-}
-
-function showAddTypeDialog() {
-    // Switch to profile tab and scroll to custom types section
-    document.querySelector('[data-tab="tab-profile"]').click();
-    setTimeout(() => {
-        document.getElementById('newCustomCode').focus();
-    }, 300);
-}
-
-// ============================================
 // Profile Management
 // ============================================
 
@@ -1033,6 +925,8 @@ document.getElementById('avatarInput').addEventListener('change', function(e) {
         renderAll();
     };
     reader.readAsDataURL(file);
+    // 清空input以便可以重复上传同一张图片到不同账户
+    this.value = '';
 });
 
 // ============================================
@@ -1098,10 +992,24 @@ function setDefaultDatetime() {
     const localNow = new Date(now.getTime() - timezoneOffset);
     const input = document.getElementById('datetime');
     if (input) {
-        input.value = localNow.toISOString().slice(0, 16);
-        input.max = localNow.toISOString().slice(0, 16);
+        const val = localNow.toISOString().slice(0, 16);
+        input.value = val;
+        input.max = val;
     }
 }
+
+// 监听日期变化，防止手机端选择未来时间
+document.addEventListener('DOMContentLoaded', function() {
+    const input = document.getElementById('datetime');
+    if (input) {
+        input.addEventListener('change', function() {
+            if (new Date(this.value) > new Date()) {
+                alert('不能选择未来的时间');
+                setDefaultDatetime();
+            }
+        });
+    }
+});
 
 function setTime(minutesAgo) {
     const date = new Date();
@@ -1269,7 +1177,6 @@ function setupTabs() {
             if (tabId === 'tab-profile') {
                 renderProfile();
                 renderProfileSwitcher();
-                renderCustomTypesList();
             }
         });
     });

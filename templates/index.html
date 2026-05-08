@@ -107,16 +107,42 @@ body::before {
 .quick-buttons button:hover { background: rgba(92,138,74,0.3); border-color: var(--sd-gold); color: var(--sd-gold); }
 
 /* Type Grid */
-.type-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+.type-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; }
 .type-option { cursor: pointer; }
 .type-option input[type="radio"] { display: none; }
-.type-box { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 8px; border: 2px solid rgba(92,138,74,0.25); border-radius: 12px; background: rgba(26,26,46,0.3); transition: all 0.25s; text-align: center; }
+.type-box { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 6px; border: 2px solid rgba(92,138,74,0.25); border-radius: 12px; background: rgba(26,26,46,0.3); transition: all 0.25s; text-align: center; }
 .type-option input[type="radio"]:checked + .type-box { border-color: var(--sd-gold); background: rgba(240,192,64,0.12); box-shadow: 0 0 12px rgba(240,192,64,0.2); transform: scale(1.03); }
 .type-box:hover { border-color: rgba(92,138,74,0.5); background: rgba(92,138,74,0.1); }
 .poop-icon { font-size: 1.8rem; line-height: 1; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; }
-.poop-icon-img { width: 48px; height: 48px; object-fit: contain; border-radius: 8px; display: none; }
-.poop-icon-emoji { font-size: 1.8rem; display: flex; align-items: center; justify-content: center; }
-.type-name { font-size: 0.75rem; color: var(--text-light); line-height: 1.3; }
+.poop-icon-img { width: 48px; height: 48px; object-fit: contain; border-radius: 8px; display: block; }
+.poop-icon-emoji { font-size: 1.8rem; display: none; align-items: center; justify-content: center; }
+.type-name { font-size: 0.7rem; color: var(--text-light); line-height: 1.3; word-break: break-all; }
+
+/* Add type button */
+.add-type-box {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+    padding: 10px 6px; border: 2px dashed rgba(92,138,74,0.3); border-radius: 12px;
+    background: rgba(26,26,46,0.2); cursor: pointer; transition: all 0.25s; text-align: center;
+    min-height: 100px;
+}
+.add-type-box:hover { border-color: var(--sd-gold); background: rgba(240,192,64,0.08); }
+.add-type-icon { font-size: 2rem; color: var(--text-muted); line-height: 1; }
+.add-type-label { font-size: 0.7rem; color: var(--text-muted); }
+
+/* Custom type management */
+.custom-type-item {
+    display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+    background: rgba(26,26,46,0.4); border-radius: 10px; border: 1px solid rgba(92,138,74,0.15);
+    margin-bottom: 8px;
+}
+.custom-type-item img { width: 36px; height: 36px; object-fit: contain; border-radius: 6px; }
+.custom-type-item .ct-name { flex: 1; font-size: 0.85rem; color: var(--text); }
+.custom-type-item .ct-code { font-size: 0.7rem; color: var(--text-muted); }
+.custom-type-item .ct-delete {
+    background: none; border: 1px solid rgba(199,107,74,0.4); color: var(--rl-rust-light);
+    padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; font-family: inherit;
+}
+.custom-type-item .ct-delete:hover { background: rgba(199,107,74,0.15); }
 
 /* Duration */
 .duration-inputs { display: flex; gap: 12px; align-items: center; }
@@ -162,6 +188,10 @@ body::before {
 .type-soft_lumps { background: rgba(92,138,74,0.15); color: var(--sd-green-light); }
 .type-mushy { background: rgba(199,107,74,0.2); color: var(--rl-rust-light); }
 .type-watery { background: rgba(27,122,138,0.2); color: var(--rl-teal-light); }
+.type-sausage_shaped_stool { background: rgba(155,74,58,0.2); color: var(--rl-rust-light); }
+.type-oily { background: rgba(240,192,64,0.15); color: var(--sd-gold); }
+.type-bubbly { background: rgba(27,122,138,0.15); color: var(--rl-teal-light); }
+.type-withblood { background: rgba(199,107,74,0.25); color: var(--rl-rust); }
 .record-notes { font-size: 0.8rem; color: var(--text-muted); margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(92,138,74,0.15); font-style: italic; }
 .delete-form { position: absolute; top: 14px; right: 10px; }
 .no-records { text-align: center; color: var(--text-muted); padding: 30px 20px; font-size: 0.9rem; }
@@ -483,6 +513,18 @@ body::before {
                     </div>
                 </div>
             </section>
+
+            <!-- Custom Poop Types Management -->
+            <section class="card">
+                <h2>🔧 自定义大便类型</h2>
+                <p class="hint" style="margin-bottom:12px;">添加你自定义的大便类型，图片请放入 static/icons/ 目录</p>
+                <div id="customTypesList"></div>
+                <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
+                    <input type="text" id="newCustomCode" class="profile-name-input" placeholder="英文标识 (如: my_type)" style="flex:1;min-width:100px;" maxlength="30">
+                    <input type="text" id="newCustomName" class="profile-name-input" placeholder="显示名称 (如: 我的类型)" style="flex:1;min-width:100px;" maxlength="20">
+                    <button class="btn btn-small btn-primary" onclick="addCustomType()" style="width:auto;">＋添加</button>
+                </div>
+            </section>
         </div>
 
         <!-- Bottom Navigation -->
@@ -507,7 +549,8 @@ body::before {
 // Data Layer - localStorage with Profile support
 // ============================================
 
-const POOP_TYPES = [
+// 内置大便类型
+const BUILTIN_POOP_TYPES = [
     { code: 'sheep', name: '羊粪蛋型', emoji: '🫏' },
     { code: 'sausage_bumpy', name: '香肠状表面凹凸不平', emoji: '🌭' },
     { code: 'sausage_cracked', name: '香肠状表面有裂痕', emoji: '🌭' },
@@ -515,16 +558,21 @@ const POOP_TYPES = [
     { code: 'soft_lumps', name: '软团状', emoji: '🥚' },
     { code: 'mushy', name: '糊状', emoji: '🥣' },
     { code: 'watery', name: '水样', emoji: '💧' },
+    { code: 'sausage_shaped_stool', name: '条状软便', emoji: '🌭' },
+    { code: 'oily', name: '油脂状', emoji: '🫒' },
+    { code: 'bubbly', name: '泡沫状', emoji: '🫧' },
+    { code: 'withblood', name: '带血状', emoji: '🩸' },
 ];
 
 // 健康评分
-const POOP_HEALTH_SCORE = {
+const BUILTIN_HEALTH_SCORE = {
     sheep: 2, sausage_bumpy: 4, sausage_cracked: 8,
     banana: 10, soft_lumps: 6, mushy: 3, watery: 1,
+    sausage_shaped_stool: 5, oily: 3, bubbly: 2, withblood: 1,
 };
 
 // 颜色映射 - 便秘改为深棕色 #5A3A1A
-const POOP_COLORS = {
+const BUILTIN_COLORS = {
     sheep: '#5A3A1A',
     sausage_bumpy: '#c4a87c',
     sausage_cracked: '#7cb342',
@@ -532,7 +580,39 @@ const POOP_COLORS = {
     soft_lumps: '#f0c040',
     mushy: '#c76b4a',
     watery: '#1b7a8a',
+    sausage_shaped_stool: '#c4a87c',
+    oily: '#d4a843',
+    bubbly: '#5caba8',
+    withblood: '#9b4a3a',
 };
+
+// 获取所有类型（内置 + 自定义）
+function getAllTypes() {
+    const custom = getCustomTypes();
+    return [...BUILTIN_POOP_TYPES, ...custom];
+}
+
+function getHealthScore(code) {
+    if (BUILTIN_HEALTH_SCORE[code] !== undefined) return BUILTIN_HEALTH_SCORE[code];
+    return 5; // 自定义类型默认5分
+}
+
+function getColor(code) {
+    if (BUILTIN_COLORS[code] !== undefined) return BUILTIN_COLORS[code];
+    return '#888888'; // 自定义类型默认灰色
+}
+
+// 自定义类型存储
+function getCustomTypes() {
+    try {
+        const raw = localStorage.getItem('poop_tracker_custom_types');
+        return raw ? JSON.parse(raw) : [];
+    } catch(e) { return []; }
+}
+
+function saveCustomTypes(types) {
+    localStorage.setItem('poop_tracker_custom_types', JSON.stringify(types));
+}
 
 // 默认数据
 function getDefaultData() {
@@ -550,12 +630,10 @@ function loadData() {
         const raw = localStorage.getItem('poop_tracker_data');
         if (raw) {
             const data = JSON.parse(raw);
-            // 确保数据结构完整
             if (!data.profiles) data.profiles = { '我': { avatar: null, records: [] } };
             if (!data.currentProfile || !data.profiles[data.currentProfile]) {
                 data.currentProfile = Object.keys(data.profiles)[0] || '我';
             }
-            // 确保每个profile都有records和avatar字段
             Object.keys(data.profiles).forEach(key => {
                 if (!data.profiles[key].records) data.profiles[key].records = [];
                 if (data.profiles[key].avatar === undefined) data.profiles[key].avatar = null;
@@ -568,12 +646,10 @@ function loadData() {
     return getDefaultData();
 }
 
-// 保存数据
 function saveData(data) {
     localStorage.setItem('poop_tracker_data', JSON.stringify(data));
 }
 
-// 获取当前 profile 的数据
 function getCurrentProfileData() {
     const data = loadData();
     const profile = data.currentProfile;
@@ -583,12 +659,6 @@ function getCurrentProfileData() {
         records: data.profiles[profile] ? data.profiles[profile].records : [],
         avatar: data.profiles[profile] ? data.profiles[profile].avatar : null
     };
-}
-
-// 获取所有 profile 列表
-function getProfiles() {
-    const data = loadData();
-    return Object.keys(data.profiles);
 }
 
 // ============================================
@@ -647,6 +717,13 @@ function getDietSuggestion(records) {
     return '🥗 肠道状态中等，建议保持饮食均衡，多吃蔬菜水果，适量饮水，规律作息。';
 }
 
+// 图片加载失败时，隐藏图片，显示 emoji
+function handleImgError(img) {
+    img.style.display = 'none';
+    const emoji = img.nextElementSibling;
+    if (emoji) emoji.style.display = 'flex';
+}
+
 // ============================================
 // Core App Functions
 // ============================================
@@ -660,23 +737,25 @@ function renderAll() {
     renderWeeklySummary();
     renderDietSuggestion();
     renderProfileSwitcher();
+    renderCustomTypesList();
     if (calendarInitialized) renderCalendar(calendarYear, calendarMonth);
 }
 
-// Render type grid (with image slot for Rusty Lake icons)
+// Render type grid (with "+" button for custom types)
 function renderTypeGrid() {
     const grid = document.getElementById('typeGrid');
-    grid.innerHTML = POOP_TYPES.map((t, idx) => {
-        const emojis = ['🫏', '🌭', '🌭', '🍌', '🥚', '🥣', '💧'];
+    const allTypes = getAllTypes();
+    
+    let html = allTypes.map(t => {
         return `
             <label class="type-option">
                 <input type="radio" name="type" value="${t.code}" required>
                 <span class="type-box">
                     <span class="poop-icon">
                         <img class="poop-icon-img" id="poop-img-${t.code}" 
-                             src="" alt="${t.name}"
-                             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-                        <span class="poop-icon-emoji" id="poop-emoji-${t.code}">${emojis[idx]}</span>
+                             src="/static/icons/poop_${t.code}.png" alt="${t.name}"
+                             onerror="handleImgError(this)">
+                        <span class="poop-icon-emoji" id="poop-emoji-${t.code}">${t.emoji || '💩'}</span>
                     </span>
                     <span class="type-name">${t.name}</span>
                 </span>
@@ -684,11 +763,15 @@ function renderTypeGrid() {
         `;
     }).join('');
 
-    // 尝试加载锈湖风格图片（用户可自行放置）
-    POOP_TYPES.forEach(t => {
-        const img = document.getElementById(`poop-img-${t.code}`);
-        img.src = `/static/icons/poop_${t.code}.png`;
-    });
+    // Add "+" button
+    html += `
+        <div class="add-type-box" onclick="showAddTypeDialog()">
+            <span class="add-type-icon">＋</span>
+            <span class="add-type-label">自定义类型</span>
+        </div>
+    `;
+    
+    grid.innerHTML = html;
 }
 
 function renderRecords() {
@@ -698,12 +781,13 @@ function renderRecords() {
         container.innerHTML = '<p class="no-records">还没有记录哦，快添加第一条吧！</p>';
         return;
     }
+    const allTypes = getAllTypes();
     container.innerHTML = records.map(r => {
-        const typeInfo = POOP_TYPES.find(t => t.code === r.type);
+        const typeInfo = allTypes.find(t => t.code === r.type);
         const typeName = typeInfo ? typeInfo.name : r.type;
-        const emoji = typeInfo ? typeInfo.emoji : '💩';
-        const healthScore = POOP_HEALTH_SCORE[r.type];
-        const color = POOP_COLORS[r.type];
+        const emoji = typeInfo ? (typeInfo.emoji || '💩') : '💩';
+        const healthScore = getHealthScore(r.type);
+        const color = getColor(r.type);
         const durationText = formatDuration(r.duration);
         return `
             <div class="record-item">
@@ -740,12 +824,12 @@ function renderStats() {
         ? Math.round(totalDuration / records.filter(r => r.duration > 0).length) : 0;
     document.getElementById('avgDuration').textContent = formatDuration(avgDurationSec) || '-';
     
-    // Type distribution
     const typeCounts = {};
     records.forEach(r => { typeCounts[r.type] = (typeCounts[r.type] || 0) + 1; });
     
+    const allTypes = getAllTypes();
     const container = document.getElementById('typeStats');
-    container.innerHTML = POOP_TYPES.map(t => {
+    container.innerHTML = allTypes.map(t => {
         const count = typeCounts[t.code] || 0;
         if (count === 0) return '';
         const pct = Math.round(count / total * 100);
@@ -778,7 +862,7 @@ function renderWeeklySummary() {
     document.getElementById('weekDuration').textContent = formatDuration(weekTotalDuration) || '-';
     
     if (weekRecords.length > 0) {
-        const scores = weekRecords.map(r => POOP_HEALTH_SCORE[r.type] || 5);
+        const scores = weekRecords.map(r => getHealthScore(r.type));
         const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
         document.getElementById('weekHealth').textContent = avg.toFixed(1);
         document.getElementById('weekHealthLevel').textContent = getHealthLevel(avg);
@@ -813,6 +897,61 @@ function renderProfileSwitcher() {
     select.innerHTML = profiles.map(p => 
         `<option value="${p}" ${p === data.currentProfile ? 'selected' : ''}>${p}</option>`
     ).join('');
+}
+
+// ============================================
+// Custom Type Management
+// ============================================
+
+function renderCustomTypesList() {
+    const container = document.getElementById('customTypesList');
+    const custom = getCustomTypes();
+    if (custom.length === 0) {
+        container.innerHTML = '<p class="hint">暂无自定义类型</p>';
+        return;
+    }
+    container.innerHTML = custom.map(t => `
+        <div class="custom-type-item">
+            <img src="/static/icons/poop_${t.code}.png" alt="${t.name}" onerror="this.style.display='none'">
+            <span class="ct-name">${t.name}</span>
+            <span class="ct-code">${t.code}</span>
+            <button class="ct-delete" onclick="deleteCustomType('${t.code}')">删除</button>
+        </div>
+    `).join('');
+}
+
+function addCustomType() {
+    const code = document.getElementById('newCustomCode').value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '_');
+    const name = document.getElementById('newCustomName').value.trim();
+    if (!code || !name) { alert('请填写标识和名称'); return; }
+    
+    // Check if code already exists
+    const allTypes = getAllTypes();
+    if (allTypes.find(t => t.code === code)) { alert('该标识已存在'); return; }
+    
+    const custom = getCustomTypes();
+    custom.push({ code: code, name: name, emoji: '💩' });
+    saveCustomTypes(custom);
+    
+    document.getElementById('newCustomCode').value = '';
+    document.getElementById('newCustomName').value = '';
+    renderAll();
+}
+
+function deleteCustomType(code) {
+    if (!confirm(`确定删除类型"${code}"吗？`)) return;
+    let custom = getCustomTypes();
+    custom = custom.filter(t => t.code !== code);
+    saveCustomTypes(custom);
+    renderAll();
+}
+
+function showAddTypeDialog() {
+    // Switch to profile tab and scroll to custom types section
+    document.querySelector('[data-tab="tab-profile"]').click();
+    setTimeout(() => {
+        document.getElementById('newCustomCode').focus();
+    }, 300);
 }
 
 // ============================================
@@ -882,7 +1021,6 @@ function loadAvatar() {
     }
 }
 
-// Avatar upload via FileReader (no server needed)
 document.getElementById('avatarInput').addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (!file) return;
@@ -901,7 +1039,6 @@ document.getElementById('avatarInput').addEventListener('change', function(e) {
 // Records CRUD
 // ============================================
 
-// Add record
 document.getElementById('poopForm').addEventListener('submit', function(e) {
     e.preventDefault();
     const formData = new FormData(this);
@@ -913,7 +1050,6 @@ document.getElementById('poopForm').addEventListener('submit', function(e) {
     
     if (!datetime || !type) { alert('请填写完整信息'); return; }
     
-    // Validate not in future
     const inputDate = new Date(datetime);
     if (inputDate > new Date()) { alert('不能选择未来的时间'); return; }
     
@@ -935,11 +1071,9 @@ document.getElementById('poopForm').addEventListener('submit', function(e) {
     records.push(newRecord);
     saveData(data);
     
-    // Reset form
     this.reset();
     document.getElementById('duration_minutes').value = '0';
     document.getElementById('duration_seconds').value = '0';
-    // Reset datetime to now
     setDefaultDatetime();
     
     renderAll();
@@ -978,7 +1112,6 @@ function setTime(minutesAgo) {
     if (input) input.value = localDate.toISOString().slice(0, 16);
 }
 
-// Add quick time buttons
 function setupQuickButtons() {
     const hint = document.querySelector('.hint');
     const datetimeInput = document.getElementById('datetime');
@@ -1041,7 +1174,6 @@ function renderCalendar(year, month) {
     
     const { records } = appData;
     
-    // Build days data
     const daysData = {};
     records.forEach(r => {
         const d = new Date(r.datetime);
@@ -1051,8 +1183,8 @@ function renderCalendar(year, month) {
             daysData[day].push({
                 type: r.type,
                 duration: r.duration || 0,
-                color: POOP_COLORS[r.type] || '#888',
-                health_score: POOP_HEALTH_SCORE[r.type] || 5,
+                color: getColor(r.type),
+                health_score: getHealthScore(r.type),
             });
         }
     });
@@ -1060,7 +1192,6 @@ function renderCalendar(year, month) {
     const allDurations = Object.values(daysData).flat().map(r => r.duration);
     const maxDuration = Math.max(...allDurations, 1);
     
-    // Previous month trailing days
     for (let i = firstDay - 1; i >= 0; i--) {
         const cell = document.createElement('div');
         cell.className = 'cal-day cal-day-other';
@@ -1068,7 +1199,6 @@ function renderCalendar(year, month) {
         grid.appendChild(cell);
     }
     
-    // Current month
     for (let d = 1; d <= daysInMonth; d++) {
         const cell = document.createElement('div');
         cell.className = 'cal-day';
@@ -1102,7 +1232,6 @@ function renderCalendar(year, month) {
         grid.appendChild(cell);
     }
     
-    // Next month leading days
     const totalCells = firstDay + daysInMonth;
     const remaining = 7 - (totalCells % 7);
     if (remaining < 7) {
@@ -1131,17 +1260,16 @@ function setupTabs() {
             tabContents.forEach(tab => tab.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
             
-            // Init calendar on first stats tab click
             if (tabId === 'tab-stats' && !calendarInitialized) {
                 setTimeout(() => {
                     initCalendar();
                     calendarInitialized = true;
                 }, 100);
             }
-            // Refresh when switching to profile tab
             if (tabId === 'tab-profile') {
                 renderProfile();
                 renderProfileSwitcher();
+                renderCustomTypesList();
             }
         });
     });

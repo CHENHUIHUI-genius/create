@@ -4,8 +4,298 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Poop Tracker 💩</title>
-    <link rel="stylesheet" href="/static/style.css">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💩</text></svg>">
+    <style>
+/* ============================================
+   Poop Tracker - 星露谷 × 锈湖 混合风格
+   ============================================ */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+    --sd-green: #5c8a4a;
+    --sd-green-light: #7cb342;
+    --sd-green-dark: #3d6b2e;
+    --sd-brown: #8b6f47;
+    --sd-brown-light: #c4a87c;
+    --sd-cream: #f5e6c8;
+    --sd-cream-dark: #e8d5a8;
+    --sd-gold: #f0c040;
+    --sd-sky: #87ceeb;
+    --rl-dark: #1a1a2e;
+    --rl-teal: #0f4c5c;
+    --rl-teal-light: #1b7a8a;
+    --rl-rust: #9b4a3a;
+    --rl-rust-light: #c76b4a;
+    --rl-mint: #5caba8;
+    --rl-shadow: #2d2d44;
+    --rl-fog: #3a3a5c;
+    --bg: #2a2a3e;
+    --bg-gradient: linear-gradient(180deg, #1a1a2e 0%, #2a2a3e 50%, #3d2a1e 100%);
+    --card-bg: rgba(245, 230, 200, 0.12);
+    --card-border: rgba(92, 138, 74, 0.4);
+    --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    --text: #f5e6c8;
+    --text-light: #c4a87c;
+    --text-muted: #8b6f47;
+    --accent: var(--sd-gold);
+    --danger: #c76b4a;
+    --radius: 16px;
+    --constipation: #5A3A1A;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+    background: var(--bg-gradient);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100vh;
+    background-attachment: fixed;
+    position: relative;
+    overflow-x: hidden;
+}
+
+body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-image: 
+        radial-gradient(circle at 20% 80%, rgba(15, 76, 92, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(155, 74, 58, 0.1) 0%, transparent 50%),
+        repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.02) 2px, rgba(255,255,255,0.02) 4px);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.app-container { max-width: 600px; margin: 0 auto; padding: 20px 16px 40px; position: relative; z-index: 1; }
+
+/* Header */
+.app-header { text-align: center; margin-bottom: 28px; padding: 24px 16px 16px; position: relative; }
+.app-header::after { content: ''; display: block; width: 60%; height: 3px; background: linear-gradient(90deg, transparent, var(--sd-gold), transparent); margin: 16px auto 0; border-radius: 2px; }
+.logo { font-size: 3.5rem; margin-bottom: 8px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4)); animation: float 3s ease-in-out infinite; }
+@keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+.app-header h1 { font-size: 1.8rem; color: var(--sd-gold); font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.5); letter-spacing: 2px; }
+.subtitle { color: var(--text-light); font-size: 0.85rem; margin-top: 6px; font-style: italic; }
+
+/* Cards */
+.card { background: var(--card-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid var(--card-border); border-radius: var(--radius); padding: 20px; margin-bottom: 18px; box-shadow: var(--card-shadow); position: relative; }
+.form-card { overflow: visible; }
+.records-card, .stats-card { overflow: hidden; }
+.card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--sd-green), var(--sd-gold), var(--rl-teal)); opacity: 0.6; }
+.card h2 { font-size: 1.1rem; margin-bottom: 16px; color: var(--sd-gold); font-weight: 600; letter-spacing: 1px; }
+
+/* Forms */
+.form-group { margin-bottom: 18px; }
+.form-group label { display: block; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px; color: var(--text-light); }
+.form-group input, .form-group select, .form-group textarea {
+    width: 100%; padding: 12px 14px; border: 2px solid rgba(92,138,74,0.3); border-radius: 10px;
+    font-size: 1rem; font-family: inherit; background: rgba(26,26,46,0.6); color: var(--text);
+    transition: border-color 0.3s, box-shadow 0.3s; outline: none;
+}
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    border-color: var(--sd-gold); box-shadow: 0 0 0 3px rgba(240,192,64,0.15);
+}
+.form-group textarea { resize: vertical; min-height: 60px; }
+.hint { font-size: 0.75rem; color: var(--text-muted); margin-top: 6px; font-style: italic; }
+
+/* Quick buttons */
+.quick-buttons { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+.quick-buttons button {
+    padding: 6px 14px; border: 1px solid rgba(92,138,74,0.4); border-radius: 20px;
+    background: rgba(26,26,46,0.4); color: var(--text-light); font-size: 0.8rem;
+    cursor: pointer; transition: all 0.2s; font-family: inherit;
+}
+.quick-buttons button:hover { background: rgba(92,138,74,0.3); border-color: var(--sd-gold); color: var(--sd-gold); }
+
+/* Type Grid */
+.type-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+.type-option { cursor: pointer; }
+.type-option input[type="radio"] { display: none; }
+.type-box { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 8px; border: 2px solid rgba(92,138,74,0.25); border-radius: 12px; background: rgba(26,26,46,0.3); transition: all 0.25s; text-align: center; }
+.type-option input[type="radio"]:checked + .type-box { border-color: var(--sd-gold); background: rgba(240,192,64,0.12); box-shadow: 0 0 12px rgba(240,192,64,0.2); transform: scale(1.03); }
+.type-box:hover { border-color: rgba(92,138,74,0.5); background: rgba(92,138,74,0.1); }
+.poop-icon { font-size: 1.8rem; line-height: 1; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; }
+.poop-icon-img { width: 48px; height: 48px; object-fit: contain; border-radius: 8px; display: none; }
+.poop-icon-emoji { font-size: 1.8rem; display: flex; align-items: center; justify-content: center; }
+.type-name { font-size: 0.75rem; color: var(--text-light); line-height: 1.3; }
+
+/* Duration */
+.duration-inputs { display: flex; gap: 12px; align-items: center; }
+.duration-field { display: flex; align-items: center; gap: 8px; flex: 1; }
+.duration-field input { width: 80px; text-align: center; padding: 10px; }
+.duration-field span { color: var(--text-light); font-size: 0.85rem; white-space: nowrap; }
+
+/* Buttons */
+.btn { display: inline-block; padding: 14px 24px; border: none; border-radius: 10px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s; width: 100%; font-family: inherit; letter-spacing: 1px; }
+.btn:active { transform: scale(0.97); }
+.btn-primary { background: linear-gradient(135deg, var(--sd-green), var(--sd-green-dark)); color: var(--sd-cream); box-shadow: 0 4px 12px rgba(92,138,74,0.3); }
+.btn-primary:hover { background: linear-gradient(135deg, var(--sd-green-light), var(--sd-green)); box-shadow: 0 6px 16px rgba(92,138,74,0.4); transform: translateY(-1px); }
+.btn-small { padding: 6px 14px; font-size: 0.75rem; width: auto; border-radius: 8px; }
+.btn-danger { background: transparent; color: var(--rl-rust-light); border: 1px solid var(--rl-rust); }
+.btn-danger:hover { background: rgba(199,107,74,0.15); color: var(--rl-rust-light); }
+
+/* Statistics */
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+.stat-item { background: rgba(26,26,46,0.4); border-radius: 12px; padding: 16px; text-align: center; border: 1px solid rgba(92,138,74,0.2); }
+.stat-value { display: block; font-size: 1.8rem; font-weight: 700; color: var(--sd-gold); text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+.stat-label { display: block; font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; }
+.type-stats { display: flex; flex-direction: column; gap: 8px; }
+.type-stat { display: flex; align-items: center; gap: 10px; }
+.type-stat .type-name { width: 100px; font-size: 0.75rem; color: var(--text-light); flex-shrink: 0; }
+.type-bar { flex: 1; height: 10px; background: rgba(26,26,46,0.4); border-radius: 5px; overflow: hidden; border: 1px solid rgba(92,138,74,0.2); }
+.type-bar-fill { height: 100%; background: linear-gradient(90deg, var(--sd-green), var(--sd-gold)); border-radius: 5px; transition: width 0.5s ease; min-width: 4px; }
+.type-count { font-size: 0.8rem; color: var(--text-muted); width: 24px; text-align: right; font-weight: 600; }
+
+/* Records List */
+.records-list { display: flex; flex-direction: column; gap: 10px; }
+.record-item { background: rgba(26,26,46,0.4); border-radius: 12px; padding: 14px 70px 14px 14px; position: relative; border: 1px solid rgba(92,138,74,0.15); transition: border-color 0.2s; }
+.record-item:hover { border-color: rgba(92,138,74,0.35); }
+.record-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
+.record-datetime { font-size: 0.85rem; color: var(--text); font-weight: 500; }
+.record-duration { font-size: 0.75rem; color: var(--rl-mint); font-weight: 500; }
+.record-body { margin-bottom: 4px; }
+.record-type { font-size: 0.8rem; font-weight: 500; padding: 3px 10px; border-radius: 20px; display: inline-block; }
+/* Type colors - 便秘深棕色 #5A3A1A */
+.type-sheep { background: rgba(90,58,26,0.3); color: #8B6914; }
+.type-sausage_bumpy { background: rgba(155,74,58,0.2); color: var(--rl-rust-light); }
+.type-sausage_cracked { background: rgba(155,74,58,0.25); color: var(--rl-rust); }
+.type-banana { background: rgba(240,192,64,0.2); color: var(--sd-gold); }
+.type-soft_lumps { background: rgba(92,138,74,0.15); color: var(--sd-green-light); }
+.type-mushy { background: rgba(199,107,74,0.2); color: var(--rl-rust-light); }
+.type-watery { background: rgba(27,122,138,0.2); color: var(--rl-teal-light); }
+.record-notes { font-size: 0.8rem; color: var(--text-muted); margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(92,138,74,0.15); font-style: italic; }
+.delete-form { position: absolute; top: 14px; right: 10px; }
+.no-records { text-align: center; color: var(--text-muted); padding: 30px 20px; font-size: 0.9rem; }
+
+/* Tabs */
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* Bottom Nav */
+.bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    display: flex; justify-content: space-around; align-items: center;
+    background: rgba(26,26,46,0.95); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border-top: 1px solid rgba(92,138,74,0.3); padding: 8px 0;
+    padding-bottom: calc(8px + env(safe-area-inset-bottom,0px));
+    z-index: 100; box-shadow: 0 -4px 20px rgba(0,0,0,0.4);
+}
+.nav-item {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    background: none; border: none; color: var(--text-muted); font-size: 0.7rem;
+    cursor: pointer; padding: 4px 16px; transition: all 0.2s; font-family: inherit; position: relative;
+}
+.nav-item::before {
+    content: ''; position: absolute; top: -9px; left: 50%; transform: translateX(-50%);
+    width: 0; height: 3px; background: var(--sd-gold); border-radius: 0 0 3px 3px; transition: width 0.3s;
+}
+.nav-item.active::before { width: 60%; }
+.nav-item:hover { color: var(--text-light); }
+.nav-item.active { color: var(--sd-gold); }
+.nav-icon { font-size: 1.4rem; line-height: 1; }
+.nav-label { font-size: 0.65rem; font-weight: 500; letter-spacing: 0.5px; }
+
+/* Profile */
+.profile-section { display: flex; flex-direction: column; align-items: center; gap: 20px; }
+.avatar-section { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.avatar-container { width: 100px; height: 100px; border-radius: 50%; border: 3px solid var(--sd-gold); overflow: hidden; display: flex; align-items: center; justify-content: center; background: rgba(26,26,46,0.6); box-shadow: 0 4px 16px rgba(240,192,64,0.2); position: relative; }
+.avatar-img { width: 100%; height: 100%; object-fit: cover; }
+.avatar-placeholder { font-size: 3rem; line-height: 1; }
+.upload-btn { display: inline-block; padding: 10px 24px; font-size: 0.85rem; cursor: pointer; text-align: center; width: auto; }
+.profile-info { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; }
+.info-item { background: rgba(26,26,46,0.4); border-radius: 12px; padding: 16px; text-align: center; border: 1px solid rgba(92,138,74,0.2); }
+.info-label { display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px; }
+.info-value { display: block; font-size: 1.4rem; font-weight: 700; color: var(--sd-gold); text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+
+/* Profile Switcher */
+.profile-switcher { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.profile-switcher select {
+    flex: 1; padding: 10px 14px; border: 2px solid rgba(92,138,74,0.3); border-radius: 10px;
+    font-size: 1rem; font-family: inherit; background: rgba(26,26,46,0.8); color: var(--sd-gold); outline: none;
+    -webkit-appearance: none; appearance: none; cursor: pointer;
+}
+.profile-switcher select:focus { border-color: var(--sd-gold); }
+.profile-btn {
+    padding: 10px 16px; border: 1px solid rgba(92,138,74,0.4); border-radius: 10px;
+    background: rgba(26,26,46,0.6); color: var(--text-light); font-size: 0.85rem;
+    cursor: pointer; transition: all 0.2s; font-family: inherit; white-space: nowrap;
+}
+.profile-btn:hover { border-color: var(--sd-gold); color: var(--sd-gold); }
+.profile-btn-danger { color: var(--rl-rust-light); border-color: rgba(199,107,74,0.4); }
+.profile-btn-danger:hover { border-color: var(--rl-rust-light); color: var(--rl-rust-light); background: rgba(199,107,74,0.1); }
+.profile-name-input {
+    padding: 10px 14px; border: 2px solid rgba(92,138,74,0.3); border-radius: 10px;
+    font-size: 1rem; font-family: inherit; background: rgba(26,26,46,0.8); color: var(--text); outline: none; flex: 1;
+}
+.profile-name-input:focus { border-color: var(--sd-gold); }
+
+/* Weekly Summary */
+.weekly-header { display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; }
+.weekly-header h2 { margin-bottom: 0; }
+.toggle-icon { font-size: 0.8rem; color: var(--text-muted); transition: transform 0.3s; }
+.weekly-body { margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(92,138,74,0.2); }
+.weekly-period { text-align: center; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 14px; }
+.weekly-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+.weekly-stat { background: rgba(26,26,46,0.4); border-radius: 12px; padding: 12px 8px; text-align: center; border: 1px solid rgba(92,138,74,0.15); }
+.weekly-stat-icon { display: block; font-size: 1.4rem; margin-bottom: 4px; }
+.weekly-stat-value { display: block; font-size: 1.2rem; font-weight: 700; color: var(--sd-gold); }
+.weekly-stat-label { display: block; font-size: 0.65rem; color: var(--text-muted); margin-top: 2px; }
+.weekly-health-level { text-align: center; }
+.health-badge { display: inline-block; padding: 6px 20px; border-radius: 20px; background: rgba(92,138,74,0.2); border: 1px solid rgba(92,138,74,0.3); color: var(--sd-green-light); font-size: 0.85rem; font-weight: 500; }
+
+/* Diet Card */
+.diet-card { background: rgba(15,76,92,0.15); border-color: rgba(27,122,138,0.3); }
+.diet-card::before { background: linear-gradient(90deg, var(--rl-teal), var(--rl-mint), var(--rl-teal-light)); }
+.diet-text { font-size: 0.9rem; line-height: 1.7; color: var(--text-light); }
+
+.record-health-score { font-size: 0.7rem; margin-left: 8px; font-weight: 500; }
+
+/* Calendar */
+.calendar-container { user-select: none; }
+.calendar-header { display: flex; justify-content: space-between; align-items: center; padding: 8px 0 16px; }
+.cal-nav { background: none; border: none; color: var(--sd-gold); font-size: 1.6rem; cursor: pointer; padding: 4px 12px; border-radius: 8px; transition: background 0.2s; font-family: inherit; line-height: 1; }
+.cal-nav:hover { background: rgba(240,192,64,0.1); }
+.cal-title { font-size: 1rem; font-weight: 600; color: var(--text); }
+.calendar-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; margin-bottom: 8px; }
+.calendar-weekdays span { text-align: center; font-size: 0.7rem; color: var(--text-muted); padding: 6px 0; font-weight: 500; }
+.calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+.cal-day { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 4px 2px; border-radius: 8px; background: rgba(26,26,46,0.2); min-height: 48px; position: relative; }
+.cal-day-other { opacity: 0.3; }
+.cal-day-today { background: rgba(240,192,64,0.1); border: 1px solid rgba(240,192,64,0.3); }
+.cal-day-num { font-size: 0.75rem; color: var(--text); font-weight: 500; margin-bottom: 2px; }
+.cal-day-today .cal-day-num { color: var(--sd-gold); font-weight: 700; }
+.cal-dots { display: flex; flex-wrap: wrap; gap: 2px; justify-content: center; }
+.cal-dot { border-radius: 50%; min-width: 6px; min-height: 6px; }
+.calendar-legend { display: flex; gap: 12px; justify-content: center; margin-top: 12px; flex-wrap: wrap; }
+.legend-item { display: flex; align-items: center; gap: 4px; font-size: 0.7rem; color: var(--text-muted); }
+.legend-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+
+/* iOS Safe Area */
+@supports (padding-top: env(safe-area-inset-top)) {
+    .app-container { padding-top: calc(20px + env(safe-area-inset-top)); padding-bottom: calc(80px + env(safe-area-inset-bottom)); }
+}
+@media screen and (max-width: 480px) {
+    input, select, textarea { font-size: 16px !important; }
+}
+@media (max-width: 480px) {
+    .app-container { padding: 12px 10px 30px; }
+    .card { padding: 16px; border-radius: 14px; }
+    .app-header h1 { font-size: 1.4rem; }
+    .logo { font-size: 2.8rem; }
+    .type-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 6px; }
+    .type-box { padding: 10px 6px; }
+    .poop-icon { font-size: 1.4rem; }
+    .type-name { font-size: 0.7rem; }
+    .stats-grid { gap: 8px; }
+    .stat-value { font-size: 1.5rem; }
+    .duration-inputs { flex-direction: row; }
+    .duration-field input { width: 70px; }
+    .type-stat .type-name { width: 80px; font-size: 0.7rem; }
+}
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(92,138,74,0.3); border-radius: 2px; }
+::selection { background: rgba(240,192,64,0.3); color: var(--text); }
+    </style>
 </head>
 <body>
     <div class="app-container">
@@ -19,34 +309,32 @@
         <!-- Tab: 记录 -->
         <div id="tab-records" class="tab-content active">
             <!-- Weekly Summary -->
-            <section class="card weekly-card" id="weeklySummary">
+            <section class="card weekly-card">
                 <div class="weekly-header" onclick="toggleWeeklySummary()">
                     <h2>📊 本周拉屎总结</h2>
                     <span class="toggle-icon" id="weeklyToggle">▶</span>
                 </div>
                 <div class="weekly-body" id="weeklyBody" style="display: none;">
-                    <div class="weekly-period">
-                        {{ week_summary.start_date }} - {{ week_summary.end_date }}
-                    </div>
+                    <div class="weekly-period" id="weekPeriod"></div>
                     <div class="weekly-stats">
                         <div class="weekly-stat">
                             <span class="weekly-stat-icon">💩</span>
-                            <span class="weekly-stat-value">{{ week_summary.poop_count }}</span>
+                            <span class="weekly-stat-value" id="weekCount">0</span>
                             <span class="weekly-stat-label">本周拉屎次数</span>
                         </div>
                         <div class="weekly-stat">
                             <span class="weekly-stat-icon">⏱️</span>
-                            <span class="weekly-stat-value">{{ week_summary.total_duration }}</span>
+                            <span class="weekly-stat-value" id="weekDuration">-</span>
                             <span class="weekly-stat-label">本周拉屎总时长</span>
                         </div>
                         <div class="weekly-stat">
                             <span class="weekly-stat-icon">❤️</span>
-                            <span class="weekly-stat-value">{{ week_summary.avg_health }}</span>
+                            <span class="weekly-stat-value" id="weekHealth">-</span>
                             <span class="weekly-stat-label">平均健康评分</span>
                         </div>
                     </div>
                     <div class="weekly-health-level">
-                        <span class="health-badge">{{ week_summary.health_level }}</span>
+                        <span class="health-badge" id="weekHealthLevel">暂无数据</span>
                     </div>
                 </div>
             </section>
@@ -54,13 +342,13 @@
             <!-- Diet Suggestion -->
             <section class="card diet-card">
                 <h2>🥗 饮食建议</h2>
-                <p class="diet-text">{{ diet_suggestion }}</p>
+                <p class="diet-text" id="dietSuggestion">暂无数据，开始记录后会有饮食建议哦~</p>
             </section>
 
             <!-- Add Record Form -->
             <section class="card form-card">
                 <h2>➕ 添加记录</h2>
-                <form action="/add" method="POST" id="poopForm">
+                <form id="poopForm">
                     <!-- Date & Time -->
                     <div class="form-group">
                         <label>📅 日期和时间</label>
@@ -71,16 +359,8 @@
                     <!-- Poop Type -->
                     <div class="form-group">
                         <label>💩 大便类型</label>
-                        <div class="type-grid">
-                            {% for type_code, type_name in poop_types %}
-                            <label class="type-option">
-                                <input type="radio" name="type" value="{{ type_code }}" required>
-                                <span class="type-box">
-                                    <span class="poop-icon">{{ ['🫏', '🌭', '🌭', '🍌', '🥚', '🥣', '💧'][loop.index0] }}</span>
-                                    <span class="type-name">{{ type_name }}</span>
-                                </span>
-                            </label>
-                            {% endfor %}
+                        <div class="type-grid" id="typeGrid">
+                            <!-- Rendered by JS -->
                         </div>
                     </div>
                     
@@ -112,45 +392,9 @@
             <!-- Records List -->
             <section class="card records-card">
                 <h2>📋 记录</h2>
-                {% if records %}
-                <div class="records-list">
-                    {% for record in records %}
-                    <div class="record-item">
-                        <div class="record-header">
-                            <span class="record-datetime">{{ record.datetime }}</span>
-                            {% if record.duration_text %}
-                            <span class="record-duration">⏱️ {{ record.duration_text }}</span>
-                            {% endif %}
-                        </div>
-                        <div class="record-body">
-                            <span class="record-type type-{{ record.type }}">
-                                {% if record.type == 'sheep' %}🫏 羊粪蛋型
-                                {% elif record.type == 'sausage_bumpy' %}🌭 香肠状表面凹凸不平
-                                {% elif record.type == 'sausage_cracked' %}🌭 香肠状表面有裂痕
-                                {% elif record.type == 'banana' %}🍌 香蕉型
-                                {% elif record.type == 'soft_lumps' %}🥚 软团状
-                                {% elif record.type == 'mushy' %}🥣 糊状
-                                {% elif record.type == 'watery' %}💧 水样
-                                {% endif %}
-                            </span>
-                            <span class="record-health-score" style="color: {{ poop_colors.get(record.type, '#888') }};">
-                                {% if poop_health_scores.get(record.type) %}
-                                    健康评分: {{ poop_health_scores[record.type] }}/10
-                                {% endif %}
-                            </span>
-                        </div>
-                        {% if record.notes %}
-                        <p class="record-notes">{{ record.notes }}</p>
-                        {% endif %}
-                        <form action="/delete/{{ record.id }}" method="POST" class="delete-form">
-                            <button type="submit" class="btn btn-small btn-danger">删除</button>
-                        </form>
-                    </div>
-                    {% endfor %}
+                <div class="records-list" id="recordsList">
+                    <p class="no-records">还没有记录哦，快添加第一条吧！</p>
                 </div>
-                {% else %}
-                <p class="no-records">还没有记录哦，快添加第一条吧！</p>
-                {% endif %}
             </section>
         </div>
 
@@ -160,31 +404,20 @@
                 <h2>📊 统计</h2>
                 <div class="stats-grid">
                     <div class="stat-item">
-                        <span class="stat-value">{{ total }}</span>
+                        <span class="stat-value" id="totalRecords">0</span>
                         <span class="stat-label">总记录</span>
                     </div>
                     <div class="stat-item">
-                        <span class="stat-value">{{ avg_duration }}</span>
+                        <span class="stat-value" id="avgDuration">-</span>
                         <span class="stat-label">平均时长</span>
                     </div>
                 </div>
-                <!-- Type distribution -->
-                <div class="type-stats">
-                    {% for type_code, type_name in poop_types %}
-                    {% if type_counts.get(type_code) %}
-                    <div class="type-stat">
-                        <span class="type-name">{{ type_name }}</span>
-                        <div class="type-bar">
-                            <div class="type-bar-fill" style="width: {{ (type_counts[type_code] / total * 100)|round }}%"></div>
-                        </div>
-                        <span class="type-count">{{ type_counts[type_code] }}</span>
-                    </div>
-                    {% endif %}
-                    {% endfor %}
+                <div class="type-stats" id="typeStats">
+                    <!-- Rendered by JS -->
                 </div>
             </section>
 
-            <!-- iOS-style Calendar -->
+            <!-- Calendar -->
             <section class="card calendar-card">
                 <h2>📅 日历</h2>
                 <div class="calendar-container">
@@ -194,13 +427,7 @@
                         <button class="cal-nav" onclick="changeMonth(1)">›</button>
                     </div>
                     <div class="calendar-weekdays">
-                        <span>日</span>
-                        <span>一</span>
-                        <span>二</span>
-                        <span>三</span>
-                        <span>四</span>
-                        <span>五</span>
-                        <span>六</span>
+                        <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
                     </div>
                     <div class="calendar-grid" id="calendarGrid"></div>
                 </div>
@@ -208,7 +435,7 @@
                     <span class="legend-item"><span class="legend-dot" style="background: #5c8a4a"></span> 健康</span>
                     <span class="legend-item"><span class="legend-dot" style="background: #f0c040"></span> 偏软</span>
                     <span class="legend-item"><span class="legend-dot" style="background: #c76b4a"></span> 腹泻倾向</span>
-                    <span class="legend-item"><span class="legend-dot" style="background: #8b6f47"></span> 便秘</span>
+                    <span class="legend-item"><span class="legend-dot" style="background: #5A3A1A"></span> 便秘</span>
                 </div>
             </section>
         </div>
@@ -217,28 +444,41 @@
         <div id="tab-profile" class="tab-content">
             <section class="card profile-card">
                 <h2>👤 我的</h2>
+                <!-- Profile Switcher -->
+                <div class="profile-switcher" id="profileSwitcher">
+                    <select id="profileSelect" onchange="switchProfile(this.value)"></select>
+                    <button class="profile-btn" onclick="showAddProfile()">＋新建</button>
+                    <button class="profile-btn profile-btn-danger" onclick="deleteCurrentProfile()">删除</button>
+                </div>
+                <!-- Add Profile -->
+                <div id="addProfileForm" style="display:none;" class="form-group">
+                    <label>新 Profile 名称</label>
+                    <div style="display:flex;gap:8px;">
+                        <input type="text" id="newProfileName" class="profile-name-input" placeholder="例如：我、室友、女朋友" maxlength="20">
+                        <button class="btn btn-small btn-primary" onclick="addProfile()" style="width:auto;">确定</button>
+                        <button class="btn btn-small btn-danger" onclick="cancelAddProfile()" style="width:auto;">取消</button>
+                    </div>
+                </div>
                 <div class="profile-section">
                     <div class="avatar-section">
                         <div class="avatar-container">
-                            <img id="avatar-preview" src="" alt="头像" class="avatar-img" style="display:none">
+                            <img id="avatar-preview" alt="头像" class="avatar-img" style="display:none">
                             <div class="avatar-placeholder" id="avatar-placeholder">💩</div>
                         </div>
-                        <form action="/upload-avatar" method="POST" enctype="multipart/form-data" id="avatarForm">
-                            <label class="btn btn-primary upload-btn">
-                                上传头像
-                                <input type="file" name="avatar" accept="image/*" style="display:none" onchange="document.getElementById('avatarForm').submit()">
-                            </label>
-                        </form>
+                        <label class="btn btn-primary upload-btn">
+                            上传头像
+                            <input type="file" id="avatarInput" accept="image/*" style="display:none">
+                        </label>
                         <p class="hint">点击上传你的专属头像</p>
                     </div>
                     <div class="profile-info">
                         <div class="info-item">
                             <span class="info-label">总记录数</span>
-                            <span class="info-value">{{ total }}</span>
+                            <span class="info-value" id="profileTotal">0</span>
                         </div>
                         <div class="info-item">
                             <span class="info-label">平均时长</span>
-                            <span class="info-value">{{ avg_duration }}</span>
+                            <span class="info-value" id="profileAvgDuration">-</span>
                         </div>
                     </div>
                 </div>
@@ -263,238 +503,673 @@
     </div>
 
     <script>
-        // Tab switching
-        const navItems = document.querySelectorAll('.nav-item');
-        const tabContents = document.querySelectorAll('.tab-content');
+// ============================================
+// Data Layer - localStorage with Profile support
+// ============================================
 
-        navItems.forEach(item => {
-            item.addEventListener('click', function() {
-                // Update nav active state
-                navItems.forEach(nav => nav.classList.remove('active'));
-                this.classList.add('active');
+const POOP_TYPES = [
+    { code: 'sheep', name: '羊粪蛋型', emoji: '🫏' },
+    { code: 'sausage_bumpy', name: '香肠状表面凹凸不平', emoji: '🌭' },
+    { code: 'sausage_cracked', name: '香肠状表面有裂痕', emoji: '🌭' },
+    { code: 'banana', name: '香蕉型', emoji: '🍌' },
+    { code: 'soft_lumps', name: '软团状', emoji: '🥚' },
+    { code: 'mushy', name: '糊状', emoji: '🥣' },
+    { code: 'watery', name: '水样', emoji: '💧' },
+];
 
-                // Show corresponding tab
-                const tabId = this.dataset.tab;
-                tabContents.forEach(tab => tab.classList.remove('active'));
-                document.getElementById(tabId).classList.add('active');
+// 健康评分
+const POOP_HEALTH_SCORE = {
+    sheep: 2, sausage_bumpy: 4, sausage_cracked: 8,
+    banana: 10, soft_lumps: 6, mushy: 3, watery: 1,
+};
+
+// 颜色映射 - 便秘改为深棕色 #5A3A1A
+const POOP_COLORS = {
+    sheep: '#5A3A1A',
+    sausage_bumpy: '#c4a87c',
+    sausage_cracked: '#7cb342',
+    banana: '#5c8a4a',
+    soft_lumps: '#f0c040',
+    mushy: '#c76b4a',
+    watery: '#1b7a8a',
+};
+
+// 默认数据
+function getDefaultData() {
+    return {
+        profiles: {
+            '我': { avatar: null, records: [] }
+        },
+        currentProfile: '我'
+    };
+}
+
+// 读取数据
+function loadData() {
+    try {
+        const raw = localStorage.getItem('poop_tracker_data');
+        if (raw) {
+            const data = JSON.parse(raw);
+            // 确保数据结构完整
+            if (!data.profiles) data.profiles = { '我': { avatar: null, records: [] } };
+            if (!data.currentProfile || !data.profiles[data.currentProfile]) {
+                data.currentProfile = Object.keys(data.profiles)[0] || '我';
+            }
+            // 确保每个profile都有records和avatar字段
+            Object.keys(data.profiles).forEach(key => {
+                if (!data.profiles[key].records) data.profiles[key].records = [];
+                if (data.profiles[key].avatar === undefined) data.profiles[key].avatar = null;
             });
+            return data;
+        }
+    } catch(e) {
+        console.warn('Failed to load data, resetting:', e);
+    }
+    return getDefaultData();
+}
+
+// 保存数据
+function saveData(data) {
+    localStorage.setItem('poop_tracker_data', JSON.stringify(data));
+}
+
+// 获取当前 profile 的数据
+function getCurrentProfileData() {
+    const data = loadData();
+    const profile = data.currentProfile;
+    return {
+        data: data,
+        profile: profile,
+        records: data.profiles[profile] ? data.profiles[profile].records : [],
+        avatar: data.profiles[profile] ? data.profiles[profile].avatar : null
+    };
+}
+
+// 获取所有 profile 列表
+function getProfiles() {
+    const data = loadData();
+    return Object.keys(data.profiles);
+}
+
+// ============================================
+// App State
+// ============================================
+let appData = getCurrentProfileData();
+let calendarInitialized = false;
+let calendarYear, calendarMonth;
+
+// ============================================
+// Utility Functions
+// ============================================
+
+function formatDuration(seconds) {
+    if (!seconds) return '';
+    const minutes = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    if (minutes > 0) return `${minutes}分${secs}秒`;
+    return `${secs}秒`;
+}
+
+function getHealthLevel(score) {
+    if (score >= 8) return '非常健康 🎉';
+    if (score >= 6) return '良好 👍';
+    if (score >= 4) return '一般 ⚠️';
+    return '需要注意 ❤️‍🩹';
+}
+
+function getWeekRange(date) {
+    const d = date || new Date();
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+    const monday = new Date(d.setDate(diff));
+    monday.setHours(0, 0, 0, 0);
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    sunday.setHours(23, 59, 59, 999);
+    return { start: monday, end: sunday };
+}
+
+function getDietSuggestion(records) {
+    if (!records || records.length === 0) return '暂无数据，开始记录后会有饮食建议哦~';
+    const typeCounts = {};
+    records.forEach(r => { typeCounts[r.type] = (typeCounts[r.type] || 0) + 1; });
+    const total = Object.values(typeCounts).reduce((a, b) => a + b, 0);
+    if (total === 0) return '暂无数据，开始记录后会有饮食建议哦~';
+    const constipatedTypes = ['sheep', 'sausage_bumpy'];
+    const idealTypes = ['sausage_cracked', 'banana'];
+    const diarrheaTypes = ['soft_lumps', 'mushy', 'watery'];
+    const constipatedPct = constipatedTypes.reduce((s, t) => s + (typeCounts[t] || 0), 0) / total;
+    const diarrheaPct = diarrheaTypes.reduce((s, t) => s + (typeCounts[t] || 0), 0) / total;
+    const idealPct = idealTypes.reduce((s, t) => s + (typeCounts[t] || 0), 0) / total;
+    if (constipatedPct > 0.5) return '🥦 最近有便秘倾向，建议多喝水、多吃高纤维食物（蔬菜、水果、全谷物），适当运动促进肠道蠕动。';
+    if (diarrheaPct > 0.5) return '🍚 最近肠道偏软，建议吃易消化的食物（粥、面条），避免生冷油腻，可以补充益生菌。';
+    if (idealPct > 0.6) return '🌟 肠道状态很好！继续保持均衡饮食，多吃蔬果，保持规律作息。';
+    return '🥗 肠道状态中等，建议保持饮食均衡，多吃蔬菜水果，适量饮水，规律作息。';
+}
+
+// ============================================
+// Core App Functions
+// ============================================
+
+function renderAll() {
+    appData = getCurrentProfileData();
+    renderTypeGrid();
+    renderRecords();
+    renderStats();
+    renderProfile();
+    renderWeeklySummary();
+    renderDietSuggestion();
+    renderProfileSwitcher();
+    if (calendarInitialized) renderCalendar(calendarYear, calendarMonth);
+}
+
+// Render type grid (with image slot for Rusty Lake icons)
+function renderTypeGrid() {
+    const grid = document.getElementById('typeGrid');
+    grid.innerHTML = POOP_TYPES.map((t, idx) => {
+        const emojis = ['🫏', '🌭', '🌭', '🍌', '🥚', '🥣', '💧'];
+        return `
+            <label class="type-option">
+                <input type="radio" name="type" value="${t.code}" required>
+                <span class="type-box">
+                    <span class="poop-icon">
+                        <img class="poop-icon-img" id="poop-img-${t.code}" 
+                             src="" alt="${t.name}"
+                             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                        <span class="poop-icon-emoji" id="poop-emoji-${t.code}">${emojis[idx]}</span>
+                    </span>
+                    <span class="type-name">${t.name}</span>
+                </span>
+            </label>
+        `;
+    }).join('');
+
+    // 尝试加载锈湖风格图片（用户可自行放置）
+    POOP_TYPES.forEach(t => {
+        const img = document.getElementById(`poop-img-${t.code}`);
+        img.src = `/static/icons/poop_${t.code}.png`;
+    });
+}
+
+function renderRecords() {
+    const container = document.getElementById('recordsList');
+    const { records } = appData;
+    if (!records || records.length === 0) {
+        container.innerHTML = '<p class="no-records">还没有记录哦，快添加第一条吧！</p>';
+        return;
+    }
+    container.innerHTML = records.map(r => {
+        const typeInfo = POOP_TYPES.find(t => t.code === r.type);
+        const typeName = typeInfo ? typeInfo.name : r.type;
+        const emoji = typeInfo ? typeInfo.emoji : '💩';
+        const healthScore = POOP_HEALTH_SCORE[r.type];
+        const color = POOP_COLORS[r.type];
+        const durationText = formatDuration(r.duration);
+        return `
+            <div class="record-item">
+                <div class="record-header">
+                    <span class="record-datetime">${r.datetime}</span>
+                    ${durationText ? `<span class="record-duration">⏱️ ${durationText}</span>` : ''}
+                </div>
+                <div class="record-body">
+                    <span class="record-type type-${r.type}">${emoji} ${typeName}</span>
+                    <span class="record-health-score" style="color: ${color};">健康评分: ${healthScore}/10</span>
+                </div>
+                ${r.notes ? `<p class="record-notes">${r.notes}</p>` : ''}
+                <form class="delete-form" onsubmit="deleteRecord(${r.id});return false;">
+                    <button type="submit" class="btn btn-small btn-danger">删除</button>
+                </form>
+            </div>
+        `;
+    }).join('');
+}
+
+function renderStats() {
+    const { records } = appData;
+    const total = records.length;
+    document.getElementById('totalRecords').textContent = total;
+    
+    if (total === 0) {
+        document.getElementById('avgDuration').textContent = '-';
+        document.getElementById('typeStats').innerHTML = '';
+        return;
+    }
+    
+    const totalDuration = records.reduce((s, r) => s + (r.duration || 0), 0);
+    const avgDurationSec = records.filter(r => r.duration > 0).length > 0
+        ? Math.round(totalDuration / records.filter(r => r.duration > 0).length) : 0;
+    document.getElementById('avgDuration').textContent = formatDuration(avgDurationSec) || '-';
+    
+    // Type distribution
+    const typeCounts = {};
+    records.forEach(r => { typeCounts[r.type] = (typeCounts[r.type] || 0) + 1; });
+    
+    const container = document.getElementById('typeStats');
+    container.innerHTML = POOP_TYPES.map(t => {
+        const count = typeCounts[t.code] || 0;
+        if (count === 0) return '';
+        const pct = Math.round(count / total * 100);
+        return `
+            <div class="type-stat">
+                <span class="type-name">${t.name}</span>
+                <div class="type-bar">
+                    <div class="type-bar-fill" style="width: ${pct}%"></div>
+                </div>
+                <span class="type-count">${count}</span>
+            </div>
+        `;
+    }).join('');
+}
+
+function renderWeeklySummary() {
+    const { records } = appData;
+    const { start, end } = getWeekRange(new Date());
+    const startStr = `${start.getMonth()+1}/${start.getDate()}`;
+    const endStr = `${end.getMonth()+1}/${end.getDate()}`;
+    document.getElementById('weekPeriod').textContent = `${startStr} - ${endStr}`;
+    
+    const weekRecords = records.filter(r => {
+        const d = new Date(r.datetime);
+        return d >= start && d <= end;
+    });
+    
+    document.getElementById('weekCount').textContent = weekRecords.length;
+    const weekTotalDuration = weekRecords.reduce((s, r) => s + (r.duration || 0), 0);
+    document.getElementById('weekDuration').textContent = formatDuration(weekTotalDuration) || '-';
+    
+    if (weekRecords.length > 0) {
+        const scores = weekRecords.map(r => POOP_HEALTH_SCORE[r.type] || 5);
+        const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
+        document.getElementById('weekHealth').textContent = avg.toFixed(1);
+        document.getElementById('weekHealthLevel').textContent = getHealthLevel(avg);
+    } else {
+        document.getElementById('weekHealth').textContent = '-';
+        document.getElementById('weekHealthLevel').textContent = '暂无数据';
+    }
+}
+
+function renderDietSuggestion() {
+    const { records } = appData;
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const recentRecords = records.filter(r => new Date(r.datetime) >= sevenDaysAgo);
+    document.getElementById('dietSuggestion').textContent = getDietSuggestion(recentRecords);
+}
+
+function renderProfile() {
+    const { records } = appData;
+    document.getElementById('profileTotal').textContent = records.length;
+    const totalDuration = records.reduce((s, r) => s + (r.duration || 0), 0);
+    const validRecords = records.filter(r => r.duration > 0);
+    const avgDuration = validRecords.length > 0 ? Math.round(totalDuration / validRecords.length) : 0;
+    document.getElementById('profileAvgDuration').textContent = formatDuration(avgDuration) || '-';
+    loadAvatar();
+}
+
+function renderProfileSwitcher() {
+    const data = loadData();
+    const select = document.getElementById('profileSelect');
+    const profiles = Object.keys(data.profiles);
+    select.innerHTML = profiles.map(p => 
+        `<option value="${p}" ${p === data.currentProfile ? 'selected' : ''}>${p}</option>`
+    ).join('');
+}
+
+// ============================================
+// Profile Management
+// ============================================
+
+function switchProfile(name) {
+    const data = loadData();
+    if (!data.profiles[name]) return;
+    data.currentProfile = name;
+    saveData(data);
+    renderAll();
+}
+
+function showAddProfile() {
+    document.getElementById('addProfileForm').style.display = 'block';
+    document.getElementById('newProfileName').focus();
+}
+
+function cancelAddProfile() {
+    document.getElementById('addProfileForm').style.display = 'none';
+    document.getElementById('newProfileName').value = '';
+}
+
+function addProfile() {
+    const name = document.getElementById('newProfileName').value.trim();
+    if (!name) { alert('请输入名称'); return; }
+    const data = loadData();
+    if (data.profiles[name]) { alert('该名称已存在'); return; }
+    data.profiles[name] = { avatar: null, records: [] };
+    data.currentProfile = name;
+    saveData(data);
+    document.getElementById('newProfileName').value = '';
+    document.getElementById('addProfileForm').style.display = 'none';
+    renderAll();
+}
+
+function deleteCurrentProfile() {
+    const data = loadData();
+    const profiles = Object.keys(data.profiles);
+    if (profiles.length <= 1) {
+        alert('至少保留一个 Profile');
+        return;
+    }
+    if (!confirm(`确定删除"${data.currentProfile}"吗？所有记录将被删除！`)) return;
+    delete data.profiles[data.currentProfile];
+    data.currentProfile = Object.keys(data.profiles)[0];
+    saveData(data);
+    renderAll();
+}
+
+// ============================================
+// Avatar
+// ============================================
+
+function loadAvatar() {
+    const { avatar } = appData;
+    const img = document.getElementById('avatar-preview');
+    const placeholder = document.getElementById('avatar-placeholder');
+    if (avatar) {
+        img.src = avatar;
+        img.style.display = 'block';
+        placeholder.style.display = 'none';
+    } else {
+        img.style.display = 'none';
+        placeholder.style.display = 'block';
+    }
+}
+
+// Avatar upload via FileReader (no server needed)
+document.getElementById('avatarInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+        const data = loadData();
+        const profile = data.currentProfile;
+        data.profiles[profile].avatar = ev.target.result;
+        saveData(data);
+        renderAll();
+    };
+    reader.readAsDataURL(file);
+});
+
+// ============================================
+// Records CRUD
+// ============================================
+
+// Add record
+document.getElementById('poopForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+    const datetime = formData.get('datetime');
+    const type = formData.get('type');
+    const durationMinutes = parseInt(formData.get('duration_minutes') || '0');
+    const durationSeconds = parseInt(formData.get('duration_seconds') || '0');
+    const notes = formData.get('notes') || '';
+    
+    if (!datetime || !type) { alert('请填写完整信息'); return; }
+    
+    // Validate not in future
+    const inputDate = new Date(datetime);
+    if (inputDate > new Date()) { alert('不能选择未来的时间'); return; }
+    
+    const data = loadData();
+    const profile = data.currentProfile;
+    const records = data.profiles[profile].records;
+    
+    const dt = new Date(datetime);
+    const formattedDt = `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')} ${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}`;
+    
+    const newRecord = {
+        id: Date.now() + Math.floor(Math.random() * 1000),
+        datetime: formattedDt,
+        type: type,
+        duration: durationMinutes * 60 + durationSeconds,
+        notes: notes || null
+    };
+    
+    records.push(newRecord);
+    saveData(data);
+    
+    // Reset form
+    this.reset();
+    document.getElementById('duration_minutes').value = '0';
+    document.getElementById('duration_seconds').value = '0';
+    // Reset datetime to now
+    setDefaultDatetime();
+    
+    renderAll();
+});
+
+function deleteRecord(id) {
+    if (!confirm('确定删除这条记录吗？')) return;
+    const data = loadData();
+    const profile = data.currentProfile;
+    data.profiles[profile].records = data.profiles[profile].records.filter(r => r.id !== id);
+    saveData(data);
+    renderAll();
+}
+
+// ============================================
+// Quick time buttons
+// ============================================
+
+function setDefaultDatetime() {
+    const now = new Date();
+    const timezoneOffset = now.getTimezoneOffset() * 60000;
+    const localNow = new Date(now.getTime() - timezoneOffset);
+    const input = document.getElementById('datetime');
+    if (input) {
+        input.value = localNow.toISOString().slice(0, 16);
+        input.max = localNow.toISOString().slice(0, 16);
+    }
+}
+
+function setTime(minutesAgo) {
+    const date = new Date();
+    date.setMinutes(date.getMinutes() - minutesAgo);
+    const timezoneOffset = date.getTimezoneOffset() * 60000;
+    const localDate = new Date(date.getTime() - timezoneOffset);
+    const input = document.getElementById('datetime');
+    if (input) input.value = localDate.toISOString().slice(0, 16);
+}
+
+// Add quick time buttons
+function setupQuickButtons() {
+    const hint = document.querySelector('.hint');
+    const datetimeInput = document.getElementById('datetime');
+    if (!hint || !datetimeInput) return;
+    const quickButtons = document.createElement('div');
+    quickButtons.className = 'quick-buttons';
+    quickButtons.innerHTML = `
+        <button type="button" onclick="setTime(0)">刚刚</button>
+        <button type="button" onclick="setTime(30)">30分钟前</button>
+        <button type="button" onclick="setTime(60)">1小时前</button>
+        <button type="button" onclick="setTime(1440)">昨天</button>
+    `;
+    hint.parentNode.insertBefore(quickButtons, hint.nextSibling);
+}
+
+// ============================================
+// Weekly Summary Toggle
+// ============================================
+
+function toggleWeeklySummary() {
+    const body = document.getElementById('weeklyBody');
+    const toggle = document.getElementById('weeklyToggle');
+    if (body.style.display === 'none') {
+        body.style.display = 'block';
+        toggle.textContent = '▼';
+    } else {
+        body.style.display = 'none';
+        toggle.textContent = '▶';
+    }
+}
+
+// ============================================
+// Calendar
+// ============================================
+
+function initCalendar() {
+    const now = new Date();
+    calendarYear = now.getFullYear();
+    calendarMonth = now.getMonth() + 1;
+    renderCalendar(calendarYear, calendarMonth);
+}
+
+function changeMonth(delta) {
+    calendarMonth += delta;
+    if (calendarMonth > 12) { calendarMonth = 1; calendarYear++; }
+    else if (calendarMonth < 1) { calendarMonth = 12; calendarYear--; }
+    renderCalendar(calendarYear, calendarMonth);
+}
+
+function renderCalendar(year, month) {
+    calendarYear = year;
+    calendarMonth = month;
+    document.getElementById('calTitle').textContent = `${year}年${month}月`;
+    const grid = document.getElementById('calendarGrid');
+    grid.innerHTML = '';
+    
+    const firstDay = new Date(year, month - 1, 1).getDay();
+    const daysInMonth = new Date(year, month, 0).getDate();
+    const daysInPrevMonth = new Date(year, month - 1, 0).getDate();
+    
+    const { records } = appData;
+    
+    // Build days data
+    const daysData = {};
+    records.forEach(r => {
+        const d = new Date(r.datetime);
+        if (d.getFullYear() === year && (d.getMonth() + 1) === month) {
+            const day = d.getDate();
+            if (!daysData[day]) daysData[day] = [];
+            daysData[day].push({
+                type: r.type,
+                duration: r.duration || 0,
+                color: POOP_COLORS[r.type] || '#888',
+                health_score: POOP_HEALTH_SCORE[r.type] || 5,
+            });
+        }
+    });
+    
+    const allDurations = Object.values(daysData).flat().map(r => r.duration);
+    const maxDuration = Math.max(...allDurations, 1);
+    
+    // Previous month trailing days
+    for (let i = firstDay - 1; i >= 0; i--) {
+        const cell = document.createElement('div');
+        cell.className = 'cal-day cal-day-other';
+        cell.textContent = daysInPrevMonth - i;
+        grid.appendChild(cell);
+    }
+    
+    // Current month
+    for (let d = 1; d <= daysInMonth; d++) {
+        const cell = document.createElement('div');
+        cell.className = 'cal-day';
+        const dayNum = document.createElement('span');
+        dayNum.className = 'cal-day-num';
+        dayNum.textContent = d;
+        cell.appendChild(dayNum);
+        
+        const today = new Date();
+        if (d === today.getDate() && month === today.getMonth() + 1 && year === today.getFullYear()) {
+            cell.classList.add('cal-day-today');
+        }
+        
+        if (daysData[d] && daysData[d].length > 0) {
+            cell.classList.add('cal-day-has-poop');
+            const dotsContainer = document.createElement('div');
+            dotsContainer.className = 'cal-dots';
+            daysData[d].forEach(record => {
+                const dot = document.createElement('div');
+                dot.className = 'cal-dot';
+                dot.style.background = record.color;
+                const heightRatio = Math.min(record.duration / maxDuration, 1);
+                const height = Math.max(6, Math.round(6 + heightRatio * 14));
+                dot.style.height = height + 'px';
+                dot.style.width = height + 'px';
+                dot.title = `时长: ${Math.floor(record.duration/60)}分${record.duration%60}秒 | 健康评分: ${record.health_score}/10`;
+                dotsContainer.appendChild(dot);
+            });
+            cell.appendChild(dotsContainer);
+        }
+        grid.appendChild(cell);
+    }
+    
+    // Next month leading days
+    const totalCells = firstDay + daysInMonth;
+    const remaining = 7 - (totalCells % 7);
+    if (remaining < 7) {
+        for (let d = 1; d <= remaining; d++) {
+            const cell = document.createElement('div');
+            cell.className = 'cal-day cal-day-other';
+            cell.textContent = d;
+            grid.appendChild(cell);
+        }
+    }
+}
+
+// ============================================
+// Tab Switching
+// ============================================
+
+function setupTabs() {
+    const navItems = document.querySelectorAll('.nav-item');
+    const tabContents = document.querySelectorAll('.tab-content');
+    
+    navItems.forEach(item => {
+        item.addEventListener('click', function() {
+            navItems.forEach(nav => nav.classList.remove('active'));
+            this.classList.add('active');
+            const tabId = this.dataset.tab;
+            tabContents.forEach(tab => tab.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            
+            // Init calendar on first stats tab click
+            if (tabId === 'tab-stats' && !calendarInitialized) {
+                setTimeout(() => {
+                    initCalendar();
+                    calendarInitialized = true;
+                }, 100);
+            }
+            // Refresh when switching to profile tab
+            if (tabId === 'tab-profile') {
+                renderProfile();
+                renderProfileSwitcher();
+            }
         });
+    });
+}
 
-        // Set default datetime to current time
-        const now = new Date();
-        const timezoneOffset = now.getTimezoneOffset() * 60000;
-        const localNow = new Date(now.getTime() - timezoneOffset);
-        const datetimeInput = document.getElementById('datetime');
-        if (datetimeInput) {
-            datetimeInput.value = localNow.toISOString().slice(0, 16);
-            datetimeInput.max = localNow.toISOString().slice(0, 16);
-        }
-        
-        // Quick time buttons
-        function setTime(minutesAgo) {
-            const date = new Date();
-            date.setMinutes(date.getMinutes() - minutesAgo);
-            const timezoneOffset = date.getTimezoneOffset() * 60000;
-            const localDate = new Date(date.getTime() - timezoneOffset);
-            if (datetimeInput) {
-                datetimeInput.value = localDate.toISOString().slice(0, 16);
-            }
-        }
-        
-        // Add quick time buttons after datetime input
-        const hint = document.querySelector('.hint');
-        if (hint && datetimeInput) {
-            const quickButtons = document.createElement('div');
-            quickButtons.className = 'quick-buttons';
-            quickButtons.innerHTML = `
-                <button type="button" onclick="setTime(0)">刚刚</button>
-                <button type="button" onclick="setTime(30)">30分钟前</button>
-                <button type="button" onclick="setTime(60)">1小时前</button>
-                <button type="button" onclick="setTime(1440)">昨天</button>
-            `;
-            hint.parentNode.insertBefore(quickButtons, hint.nextSibling);
-        }
-        
-        // Close datetime picker on second click
-        let datetimePickerOpen = false;
-        if (datetimeInput) {
-            datetimeInput.addEventListener('focus', function() {
-                if (datetimePickerOpen) {
-                    this.blur();
-                } else {
-                    datetimePickerOpen = true;
-                    this.showPicker && this.showPicker();
-                }
-            });
-            datetimeInput.addEventListener('blur', function() {
-                setTimeout(() => { datetimePickerOpen = false; }, 200);
-            });
-        }
-        
-        // Auto-select "0" in duration inputs when focusing
-        const durationInputs = document.querySelectorAll('#duration_minutes, #duration_seconds');
-        durationInputs.forEach(function(input) {
-            input.addEventListener('focus', function() {
-                this.select();
-            });
-        });
+// ============================================
+// Duration input auto select
+// ============================================
 
-        // Check for uploaded avatar
-        const avatarImg = document.getElementById('avatar-preview');
-        const avatarPlaceholder = document.getElementById('avatar-placeholder');
-        const extensions = ['png', 'jpg', 'jpeg', 'gif', 'webp'];
-        let avatarFound = false;
-        function tryAvatar(index) {
-            if (index >= extensions.length || avatarFound) return;
-            const ext = extensions[index];
-            const img = new Image();
-            img.onload = function() {
-                avatarImg.src = '/static/uploads/avatar.' + ext;
-                avatarImg.style.display = 'block';
-                avatarPlaceholder.style.display = 'none';
-                avatarFound = true;
-            };
-            img.onerror = function() {
-                tryAvatar(index + 1);
-            };
-            img.src = '/static/uploads/avatar.' + ext;
-        }
-        tryAvatar(0);
+function setupDurationInputs() {
+    document.querySelectorAll('#duration_minutes, #duration_seconds').forEach(input => {
+        input.addEventListener('focus', function() { this.select(); });
+    });
+}
 
-        // ===== Weekly Summary Toggle =====
-        function toggleWeeklySummary() {
-            const body = document.getElementById('weeklyBody');
-            const toggle = document.getElementById('weeklyToggle');
-            if (body.style.display === 'none') {
-                body.style.display = 'block';
-                toggle.textContent = '▼';
-            } else {
-                body.style.display = 'none';
-                toggle.textContent = '▶';
-            }
-        }
+// ============================================
+// Initialize App
+// ============================================
 
-        // ===== iOS-style Calendar =====
-        let currentYear, currentMonth;
+function init() {
+    setDefaultDatetime();
+    setupQuickButtons();
+    setupTabs();
+    setupDurationInputs();
+    renderAll();
+}
 
-        function initCalendar() {
-            const now = new Date();
-            currentYear = now.getFullYear();
-            currentMonth = now.getMonth() + 1; // 1-based
-            renderCalendar(currentYear, currentMonth);
-        }
-
-        function changeMonth(delta) {
-            currentMonth += delta;
-            if (currentMonth > 12) {
-                currentMonth = 1;
-                currentYear++;
-            } else if (currentMonth < 1) {
-                currentMonth = 12;
-                currentYear--;
-            }
-            renderCalendar(currentYear, currentMonth);
-        }
-
-        function renderCalendar(year, month) {
-            const title = document.getElementById('calTitle');
-            title.textContent = year + '年' + month + '月';
-
-            const grid = document.getElementById('calendarGrid');
-            grid.innerHTML = '';
-
-            // First day of month (0=Sun, 1=Mon, ..., 6=Sat)
-            const firstDay = new Date(year, month - 1, 1).getDay();
-            // Days in month
-            const daysInMonth = new Date(year, month, 0).getDate();
-            // Days in previous month
-            const daysInPrevMonth = new Date(year, month - 1, 0).getDate();
-
-            // Fetch calendar data
-            fetch(`/calendar-data?year=${year}&month=${month}`)
-                .then(res => res.json())
-                .then(data => {
-                    const daysData = data.days || {};
-                    const maxDuration = data.max_duration || 1;
-
-                    // Previous month's trailing days
-                    for (let i = firstDay - 1; i >= 0; i--) {
-                        const day = daysInPrevMonth - i;
-                        const cell = document.createElement('div');
-                        cell.className = 'cal-day cal-day-other';
-                        cell.textContent = day;
-                        grid.appendChild(cell);
-                    }
-
-                    // Current month's days
-                    for (let d = 1; d <= daysInMonth; d++) {
-                        const cell = document.createElement('div');
-                        cell.className = 'cal-day';
-                        
-                        const dayNum = document.createElement('span');
-                        dayNum.className = 'cal-day-num';
-                        dayNum.textContent = d;
-                        cell.appendChild(dayNum);
-
-                        // Check if today
-                        const today = new Date();
-                        if (d === today.getDate() && month === today.getMonth() + 1 && year === today.getFullYear()) {
-                            cell.classList.add('cal-day-today');
-                        }
-
-                        // Add poop dots if records exist for this day
-                        if (daysData[d] && daysData[d].length > 0) {
-                            cell.classList.add('cal-day-has-poop');
-                            const dotsContainer = document.createElement('div');
-                            dotsContainer.className = 'cal-dots';
-                            
-                            daysData[d].forEach(record => {
-                                const dot = document.createElement('div');
-                                dot.className = 'cal-dot';
-                                dot.style.background = record.color;
-                                // Scale height based on duration
-                                const heightRatio = Math.min(record.duration / maxDuration, 1);
-                                const height = Math.max(6, Math.round(6 + heightRatio * 14));
-                                dot.style.height = height + 'px';
-                                dot.style.width = height + 'px';
-                                dot.title = `时长: ${Math.floor(record.duration/60)}分${record.duration%60}秒 | 健康评分: ${record.health_score}/10`;
-                                dotsContainer.appendChild(dot);
-                            });
-                            
-                            cell.appendChild(dotsContainer);
-                        }
-
-                        grid.appendChild(cell);
-                    }
-
-                    // Next month's leading days to fill the grid
-                    const totalCells = firstDay + daysInMonth;
-                    const remaining = 7 - (totalCells % 7);
-                    if (remaining < 7) {
-                        for (let d = 1; d <= remaining; d++) {
-                            const cell = document.createElement('div');
-                            cell.className = 'cal-day cal-day-other';
-                            cell.textContent = d;
-                            grid.appendChild(cell);
-                        }
-                    }
-                })
-                .catch(err => {
-                    console.error('Failed to load calendar data:', err);
-                });
-        }
-
-        // Initialize calendar when stats tab is shown
-        let calendarInitialized = false;
-        document.querySelector('[data-tab="tab-stats"]').addEventListener('click', function() {
-            if (!calendarInitialized) {
-                initCalendar();
-                calendarInitialized = true;
-            }
-        });
-
-        // Also init calendar if stats tab is already visible (e.g. on page load)
-        // We'll init on first click only
+document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
 </html>
